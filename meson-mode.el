@@ -338,7 +338,7 @@ and LIMIT is used to limit the scan."
     (define-key map (kbd "<f7>") 'smie-config-show-indent)
     (define-key map (kbd "<f8>") (lambda () (interactive) (message "Indent: %d" (smie-indent-calculate))))
     map)
-  "Meson mode map - helps with debugging of meson-mode itself")
+  "Meson mode map - helps with debugging of ‘meson-mode’ itself.")
 
 ;;;###autoload
 (define-derived-mode meson-mode prog-mode "Meson"
