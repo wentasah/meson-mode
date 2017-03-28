@@ -187,7 +187,8 @@ and LIMIT is used to limit the scan."
 		       (or (> (nth 0 ppss) 0) ; - inside parentheses
 			   (looking-back      ; - after operator
 			    meson-literate-tokens-regexp
-			    meson-literate-tokens-max-length))))
+			    meson-literate-tokens-max-length)
+			   (smie-indent--bolp-1)))) ; - at empty line
 	  (setq token 'unknown))
 	(when after-token
 	  (goto-char after-token))))
@@ -231,7 +232,8 @@ and LIMIT is used to limit the scan."
 		       (or (> (nth 0 ppss) 0) ; - inside parentheses
 			   (looking-back      ; - after operator
 			    meson-literate-tokens-regexp
-			    meson-literate-tokens-max-length))))
+			    meson-literate-tokens-max-length)
+			   (smie-indent--bolp-1)))) ;- at empty line
 	  (setq token 'unknown))))
     token))
 
@@ -242,6 +244,7 @@ and LIMIT is used to limit the scan."
       (codeblock (line)
 		 (codeblock "eol" codeblock))
       (line (exp)
+	    ("eof")
 	    ("if" ifblock "endif")
 	    ("if" ifblock "else" codeblock "endif")
 	    ("foreach" foreachblock "endforeach"))
