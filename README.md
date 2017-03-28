@@ -6,7 +6,7 @@ Copyright (C) 2017  Michal Sojka
 * Version: 0.1
 * Keywords: languages, tools
 * URL: https://github.com/wentasah/meson-mode
-* Package-Requires: ((emacs "25.1"))
+* Package-Requires: ((emacs "24.3"))
 
 Licensed under the [GPL version 3](http://www.gnu.org/licenses/) or later.
 
@@ -15,6 +15,3 @@ Licensed under the [GPL version 3](http://www.gnu.org/licenses/) or later.
 This is a major mode for Meson build system files. Syntax
 highlighting works reliably. Indentation works too, but there are
 probably cases, where it breaks.
-
-Emacs 25 is required, but with some effort backporting to Emacs 24
-should be possible.

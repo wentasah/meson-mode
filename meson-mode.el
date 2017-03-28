@@ -6,7 +6,7 @@
 ;; Version: 0.1
 ;; Keywords: languages, tools
 ;; URL: https://github.com/wentasah/meson-mode
-;; Package-Requires: ((emacs "25.1"))
+;; Package-Requires: ((emacs "24.3"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -26,9 +26,6 @@
 ;; This is a major mode for Meson build system files. Syntax
 ;; highlighting works reliably. Indentation works too, but there are
 ;; probably cases, where it breaks.
-;;
-;; Emacs 25 is required, but with some effort backporting to Emacs 24
-;; should be possible.
 
 ;;; Code:
 
@@ -55,8 +52,10 @@
 (defconst meson-keywords-regexp
   (rx symbol-start (eval `(or ,@meson-keywords)) symbol-end))
 
+(require 'cl-lib)
+
 (defconst meson-keywords-max-length
-  (seq-reduce 'meson--max-length meson-keywords 0))
+  (cl-reduce 'meson--max-length meson-keywords))
 
 (defconst meson-builtin-functions-regexp
   (rx (or line-start (not (any ".")))
@@ -90,7 +89,7 @@
     "%" "/" ":" "==" "!=" "=" "<=" "<" ">=" ">" "?"))
 
 (defconst meson-literate-tokens-max-length
-  (seq-reduce 'meson--max-length meson-literate-tokens 0))
+  (cl-reduce 'meson--max-length meson-literate-tokens))
 
 (defconst meson-literate-tokens-regexp
   (rx (eval `(or ,@meson-literate-tokens))))
@@ -183,8 +182,8 @@ and LIMIT is used to limit the scan."
       (setq token
 	    (cond
 	     ((looking-at meson-keywords-regexp) (match-string-no-properties 0))
-	     ((car (seq-find (lambda (spec) (when (looking-at (cdr spec)) (car spec)))
-			     meson-token-spec)))
+	     ((cl-some (lambda (spec) (when (looking-at (cdr spec)) (car spec)))
+		       meson-token-spec))
 	     ((looking-at meson-literate-tokens-regexp)
 	      (match-string-no-properties 0))))
       (let ((after-token (when token (match-end 0))))
@@ -226,8 +225,8 @@ and LIMIT is used to limit the scan."
 			 (cond
 			  ((looking-back meson-keywords-regexp (- (point) meson-keywords-max-length) t)
 			   (match-string-no-properties 0))
-			  ((car (seq-find (lambda (spec) (when (looking-back (cdr spec) eopl t) (car spec)))
-					  meson-token-spec)))
+			  ((cl-some (lambda (spec) (when (looking-back (cdr spec) eopl t) (car spec)))
+					  meson-token-spec))
 			  ((looking-back meson-literate-tokens-regexp
 					 (- (point) meson-literate-tokens-max-length) t)
 			   (match-string-no-properties 0)))))
