@@ -308,8 +308,13 @@ and LIMIT is used to limit the scan."
       )
     )))
 
+(defgroup meson nil
+  "Meson build system mode for Emacs."
+  :group 'tools
+  :prefix "meson-")
+
 (defcustom meson-indent-basic 2
-  "Indentation offset for Meson.")
+  "Indentation offset for meson.build files.")
 
 (defun meson-smie-rules (kind token)
 ;;   (ignore-errors
