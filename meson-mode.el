@@ -164,6 +164,7 @@ and LIMIT is used to limit the scan."
            (put-text-property quote-starting-pos quote-ending-pos
                               'syntax-table (string-to-syntax "|"))))))
 
+;;; Indetation
 
 (require 'smie)
 
@@ -193,42 +194,46 @@ and LIMIT is used to limit the scan."
     token))
 
 (defun meson-smie-backward-token ()
-  (let ((token 'unknown)
-	(eopl ; end of previous line
-	 (line-end-position 0))
-	(ppss (syntax-ppss)))
-    ;; Skip comments
-    (when (nth 4 ppss)			; We are in a comment
-      (goto-char (nth 8 ppss)))		; Goto its beginning
-    ;; Check for strings. Relying on syntactic parser allows us to
-    ;; find the beginning of multi-line strings efficiently.
-    (when (equal (char-before) ?\')
-      (let* ((ppss- (syntax-ppss (1- (point))))
-	     (string-start (when (nth 3 ppss-)
-			     (nth 8 ppss-))))
-	(setq token "string")
-	(goto-char string-start)))
+  (let ((token 'unknown))
     (while (eq token 'unknown)
-      (setq token
-	    (cond
-	     ((looking-back meson-keywords-regexp (- (point) meson-keywords-max-length) t)
-	      (match-string-no-properties 0))
-	     ((car (seq-find (lambda (spec) (when (looking-back (cdr spec) eopl t) (car spec)))
-			     meson-token-spec)))
-	     ((looking-back meson-literate-tokens-regexp (- (point) meson-literate-tokens-max-length) t)
-	      (match-string-no-properties 0))))
-      (when token
-	(goto-char (match-beginning 0)))
-      (when (or (equal token "comment")
-		(equal token "ignore")
-		(and (equal token "eol") ; Skip EOL when:
-		     (or (> (nth 0 ppss) 0) ; - inside parentheses
-			 (looking-back      ; - after operator
-			  meson-literate-tokens-regexp
-			  meson-literate-tokens-max-length))))
-	(setq token 'unknown)))
+      (let ((eopl (line-end-position 0)) ; end of previous line
+	    (ppss (syntax-ppss)))
+	(setq token
+	      (cond
+	       ;; Skip comments
+	       ((nth 4 ppss)		 ; We are in a comment
+		(goto-char (nth 8 ppss)) ; goto its beginning
+		'unknown)
+	       ;; Check for strings. Relying on syntactic parser allows us to
+	       ;; find the beginning of multi-line strings efficiently.
+	       ((equal (char-before) ?\')
+		(let* ((ppss- (syntax-ppss (1- (point))))
+		       (string-start (when (nth 3 ppss-)
+				       (nth 8 ppss-))))
+		  (goto-char string-start)
+		  "string"))
+	       ;; Regexp-based matching
+	       (t (let ((tok
+			 (cond
+			  ((looking-back meson-keywords-regexp (- (point) meson-keywords-max-length) t)
+			   (match-string-no-properties 0))
+			  ((car (seq-find (lambda (spec) (when (looking-back (cdr spec) eopl t) (car spec)))
+					  meson-token-spec)))
+			  ((looking-back meson-literate-tokens-regexp
+					 (- (point) meson-literate-tokens-max-length) t)
+			   (match-string-no-properties 0)))))
+		    (when tok
+		      (goto-char (match-beginning 0)))
+		    tok))))
+	(when (or (equal token "comment")
+		  (equal token "ignore")
+		  (and (equal token "eol")  ; Skip EOL when:
+		       (or (> (nth 0 ppss) 0) ; - inside parentheses
+			   (looking-back      ; - after operator
+			    meson-literate-tokens-regexp
+			    meson-literate-tokens-max-length))))
+	  (setq token 'unknown))))
     token))
-
 
 (defconst meson-smie-grammar
   (smie-prec2->grammar
@@ -293,8 +298,6 @@ and LIMIT is used to limit the scan."
       )
     )))
 
-
-
 (defcustom meson-indent-basic 2
   "Indentation offset for Meson.")
 
@@ -314,6 +317,8 @@ and LIMIT is used to limit the scan."
     (`(:before . "elif") (smie-rule-parent))
     (_ nil)))
 
+;;; Mode definition
+
 ;; For debugging
 (defvar meson-mode-map
   (let ((map (make-sparse-keymap)))
@@ -324,7 +329,6 @@ and LIMIT is used to limit the scan."
     (define-key map (kbd "<f8>") (lambda () (interactive) (message "Indent: %d" (smie-indent-calculate))))
     map)
   "Meson mode map - helps with debugging of meson-mode itself")
-
 
 ;;;###autoload
 (define-derived-mode meson-mode prog-mode "Meson"
