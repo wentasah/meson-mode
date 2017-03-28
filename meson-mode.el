@@ -84,7 +84,7 @@
       symbol-end))
 
 (defconst meson-literate-tokens
-  '(;;"(" ")" "[" "]" ; Let syntactic parser handle theese efficiently
+  '(;;"(" ")" "[" "]" ; Let syntactic parser handle these efficiently
     "\"" "," "+=" "." "+" "-" "*"
     "%" "/" ":" "==" "!=" "=" "<=" "<" ">=" ">" "?"))
 
