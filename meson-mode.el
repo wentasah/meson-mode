@@ -3,7 +3,10 @@
 ;; Copyright (C) 2017  Michal Sojka
 
 ;; Author: Michal Sojka <sojkam1@fel.cvut.cz>
+;; Version: 0.1
 ;; Keywords: languages, tools
+;; URL: https://github.com/wentasah/meson-mode
+;; Package-Requires: ((emacs "25.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -20,7 +23,12 @@
 
 ;;; Commentary:
 
+;; This is a major mode for Meson build system files. Syntax
+;; highlighting works reliably. Indentation works too, but there are
+;; probably cases, where it breaks.
 ;;
+;; Emacs 25 is required, but with some effort backporting to Emacs 24
+;; should be possible.
 
 ;;; Code:
 
