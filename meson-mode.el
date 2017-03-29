@@ -316,7 +316,8 @@ and LIMIT is used to limit the scan."
   :prefix "meson-")
 
 (defcustom meson-indent-basic 2
-  "Indentation offset for meson.build files.")
+  "Indentation offset for meson.build files."
+  :type 'integer)
 
 (defun meson-smie-rules (kind token)
 ;;   (ignore-errors
