@@ -254,7 +254,6 @@ and LIMIT is used to limit the scan."
       (codeblock (line)
 		 (codeblock "eol" codeblock))
       (line (exp)
-	    ("eof")
 	    ("if" ifblock "endif")
 	    ("if" ifblock "else" codeblock "endif")
 	    ("foreach" foreachblock "endforeach"))
