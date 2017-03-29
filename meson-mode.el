@@ -46,8 +46,9 @@
 	 (mapcar (lambda (x) (if (stringp x) (length x) x)) args)))
     (apply 'max lengths)))
 
-(defconst meson-keywords
-  '("true" "false" "if" "else" "elif" "endif" "and" "or" "not" "foreach" "endforeach"))
+(eval-and-compile
+  (defconst meson-keywords
+    '("true" "false" "if" "else" "elif" "endif" "and" "or" "not" "foreach" "endforeach")))
 
 (defconst meson-keywords-regexp
   (rx symbol-start (eval `(or ,@meson-keywords)) symbol-end))
@@ -83,10 +84,11 @@
       (or "meson" "build_machine" "host_machine" "target_machine")
       symbol-end))
 
-(defconst meson-literate-tokens
-  '(;;"(" ")" "[" "]" ; Let syntactic parser handle these efficiently
-    "\"" "," "+=" "." "+" "-" "*"
-    "%" "/" ":" "==" "!=" "=" "<=" "<" ">=" ">" "?"))
+(eval-and-compile
+  (defconst meson-literate-tokens
+    '( ;;"(" ")" "[" "]" ; Let syntactic parser handle these efficiently
+      "\"" "," "+=" "." "+" "-" "*"
+      "%" "/" ":" "==" "!=" "=" "<=" "<" ">=" ">" "?")))
 
 (defconst meson-literate-tokens-max-length
   (cl-reduce 'meson--max-length meson-literate-tokens))
@@ -94,14 +96,15 @@
 (defconst meson-literate-tokens-regexp
   (rx (eval `(or ,@meson-literate-tokens))))
 
-(defconst meson-multiline-string-regexp
-  (rx "'''" (zero-or-more anything) "'''"))
-(defconst meson-string-regexp
-  (rx "'"
-      (zero-or-more
-       (or (not (any "'" "\\"))
-	   (seq "\\" nonl)))
-      "'"))
+(eval-and-compile
+  (defconst meson-multiline-string-regexp
+    (rx "'''" (zero-or-more anything) "'''"))
+  (defconst meson-string-regexp
+    (rx "'"
+	(zero-or-more
+	 (or (not (any "'" "\\"))
+	     (seq "\\" nonl)))
+	"'")))
 (defconst meson-comment-regexp
   (rx "#" (zero-or-more nonl)))
 
