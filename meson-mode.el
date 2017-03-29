@@ -297,6 +297,9 @@ and LIMIT is used to limit the scan."
 ;; 		  )
       ;;      (indexcall ( "[" exp "]"))
       )
+    `((assoc "eol" "elif")) ; FIXME: Solving eol/elif conflict this
+			    ; way may cause problems in indetation.
+			    ; Revisit this if it is the case.
     `((assoc "eol")
       (assoc ",")
       (assoc ":")
