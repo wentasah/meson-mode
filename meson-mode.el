@@ -226,6 +226,34 @@
 	"first_supported_argument"
 	"unittest_args"
 	"symbols_have_underscore_prefix"
+
+	;; string
+	"strip"
+	"format"
+	"to_upper"
+	"to_lower"
+	"underscorify"
+	"split"
+	"startswith"
+	"endswith"
+	"contains"
+	"to_int"
+	"join"
+	"version_compare"
+
+	;; number
+	"is_even"
+	"is_odd"
+
+	;; boolean
+	"to_string"
+	"to_int"
+
+	;; array
+	"length"
+	"contains"
+	"get"
+
 	))))
 
 (eval-and-compile
