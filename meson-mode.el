@@ -25,7 +25,13 @@
 
 ;; This is a major mode for Meson build system files. Syntax
 ;; highlighting works reliably. Indentation works too, but there are
-;; probably cases, where it breaks.
+;; probably cases, where it breaks. Simple completion is supported via
+;; `completion-at-point'. To start completion, use either <C-M-i> or
+;; install completion frameworks such as `company'. To enable
+;; `company' add the following to your .emacs:
+;;
+;;     (add-hook 'meson-mode-hook 'company-mode)
+
 
 ;;; Code:
 
@@ -58,30 +64,37 @@
 (defconst meson-keywords-max-length
   (cl-reduce 'meson--max-length meson-keywords))
 
+(eval-and-compile
+  (defconst meson-builtin-functions
+    '("add_global_arguments"
+      "add_global_link_arguments" "add_languages"
+      "add_project_arguments" "add_project_link_arguments"
+      "add_test_setup" "benchmark" "build_target"
+      "configuration_data" "configure_file" "custom_target"
+      "declare_dependency" "dependency" "error" "environment"
+      "executable" "find_program" "find_library" "files"
+      "generator" "get_option" "get_variable" "import"
+      "include_directories" "install_data" "install_headers"
+      "install_man" "install_subdir" "is_variable" "jar"
+      "join_paths" "library" "message" "project" "run_command"
+      "run_target" "set_variable" "shared_library"
+      "shared_module" "static_library" "subdir" "subproject"
+      "test" "vcs_tag")))
+
 (defconst meson-builtin-functions-regexp
   (rx (or line-start (not (any ".")))
       symbol-start
-      (group (or "add_global_arguments"
-		 "add_global_link_arguments" "add_languages"
-		 "add_project_arguments" "add_project_link_arguments"
-		 "add_test_setup" "benchmark" "build_target"
-		 "configuration_data" "configure_file" "custom_target"
-		 "declare_dependency" "dependency" "error" "environment"
-		 "executable" "find_program" "find_library" "files"
-		 "generator" "get_option" "get_variable" "import"
-		 "include_directories" "install_data" "install_headers"
-		 "install_man" "install_subdir" "is_variable" "jar"
-		 "join_paths" "library" "message" "project" "run_command"
-		 "run_target" "set_variable" "shared_library"
-		 "shared_module" "static_library" "subdir" "subproject"
-		 "test" "vcs_tag"))
+      (group (eval `(or ,@meson-builtin-functions)))
       symbol-end
       (zero-or-more whitespace)
       (or "(" line-end)))
 
+(defconst meson-builtin-vars
+  '("meson" "build_machine" "host_machine" "target_machine"))
+
 (defconst meson-builtin-vars-regexp
   (rx symbol-start
-      (or "meson" "build_machine" "host_machine" "target_machine")
+      (or (eval `(or ,@meson-builtin-vars)))
       symbol-end))
 
 (eval-and-compile
@@ -95,6 +108,125 @@
 
 (defconst meson-literate-tokens-regexp
   (rx (eval `(or ,@meson-literate-tokens))))
+
+(defconst meson-methods
+  `(("meson\\."
+     . ("get_compiler"
+	"is_cross_build"
+	"has_exe_wrapper"
+	"is_unity"
+	"is_subproject"
+	"current_source_dir"
+	"current_build_dir"
+	"source_root"
+	"build_root"
+	"add_install_script"
+	"add_postconf_script"
+	"install_dependency_manifest"
+	"project_version"
+	"version"
+	"project_name"
+	"get_cross_property"
+	"backend"))
+    (,(regexp-opt '("build_machine."
+		    "host_machine."
+		    "target_machine."))
+     . ("system"
+	"cpu_family"
+	"cpu"
+	"endian"))
+    (""
+     . ( ;; class TryRunResultHolder
+	"returncode"
+	"compiled"
+	"stdout"
+	"stderr"
+
+	;; class RunProcess
+	"returncode"
+	"stdout"
+	"stderr"
+
+	;; class EnvironmentVariablesHolder
+	"set"
+	"append"
+	"prepend"
+
+	;; class ConfigurationDataHolder
+	"set"
+	"set10"
+	"set_quoted"
+	"has"
+	"get"
+
+	;; class DependencyHolder
+	"found"
+	"type_name"
+	"version"
+	"get_pkgconfig_variable"
+
+	;; class InternalDependencyHolder
+	"found"
+	"version"
+
+	;; class ExternalProgramHolder
+	"found"
+
+	;; class ExternalLibraryHolder
+	"found"
+
+	;; class GeneratorHolder
+	"process"
+
+	;; class BuildMachine
+	"system"
+	"cpu_family"
+	"cpu"
+	"endian"
+
+	;; class CrossMachineInfo
+	"system"
+	"cpu"
+	"cpu_family"
+	"endian"
+
+	;; class BuildTargetHolder
+	"extract_objects"
+	"extract_all_objects"
+	"get_id"
+	"outdir"
+	"full_path"
+	"private_dir_include"
+
+	;; class CustomTargetHolder
+	"full_path"
+
+	;; class SubprojectHolder
+	"get_variable"
+
+	;; class CompilerHolder
+	"compiles"
+	"links"
+	"get_id"
+	"compute_int"
+	"sizeof"
+	"has_header"
+	"has_header_symbol"
+	"run"
+	"has_function"
+	"has_member"
+	"has_members"
+	"has_type"
+	"alignment"
+	"version"
+	"cmd_array"
+	"find_library"
+	"has_argument"
+	"has_multi_arguments"
+	"first_supported_argument"
+	"unittest_args"
+	"symbols_have_underscore_prefix"
+	))))
 
 (eval-and-compile
   (defconst meson-multiline-string-regexp
@@ -173,6 +305,27 @@ and LIMIT is used to limit the scan."
            ;; all three quotes.
            (put-text-property quote-starting-pos quote-ending-pos
                               'syntax-table (string-to-syntax "|"))))))
+
+;;; Completion
+
+(defun meson-completion-at-point-function ()
+  (save-excursion
+    (let* ((end (progn (skip-syntax-forward "w_")
+		       (point)))
+	   (start (progn (skip-syntax-backward "w_")
+			 (point))))
+      (cond
+       ((eq (char-before) ?.)
+	(let ((methods (cl-some
+			(lambda (x)
+			  (when (looking-back (car x) (line-beginning-position))
+			    (cdr x)))
+			meson-methods)))
+	  (list start end methods)))
+       (t
+        (list start end (append meson-keywords meson-builtin-vars
+				meson-builtin-functions)))))))
+
 
 ;;; Indetation
 
@@ -365,6 +518,8 @@ and LIMIT is used to limit the scan."
 
   (set (make-local-variable 'comment-start) "# ")
   (set (make-local-variable 'comment-end) "")
+  (add-hook 'completion-at-point-functions
+            #'meson-completion-at-point-function nil t)
   (smie-setup meson-smie-grammar #'meson-smie-rules
 	      :forward-token #'meson-smie-forward-token
 	      :backward-token #'meson-smie-backward-token)
