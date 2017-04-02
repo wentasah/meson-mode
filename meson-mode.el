@@ -521,17 +521,6 @@ and LIMIT is used to limit the scan."
 
 ;;; Mode definition
 
-;; For debugging
-(defvar meson-mode-map
-  (let ((map (make-sparse-keymap)))
-;  (let ((map global-map))
-    (define-key map (kbd "<f5>") (lambda () (interactive) (message (funcall smie-backward-token-function))))
-    (define-key map (kbd "<f6>") (lambda () (interactive) (message (funcall smie-forward-token-function))))
-    (define-key map (kbd "<f7>") 'smie-config-show-indent)
-    (define-key map (kbd "<f8>") (lambda () (interactive) (message "Indent: %d" (smie-indent-calculate))))
-    map)
-  "Meson mode map - helps with debugging of ‘meson-mode’ itself.")
-
 ;;;###autoload
 (define-derived-mode meson-mode prog-mode "Meson"
   "Major mode for editing Meson build system files."
