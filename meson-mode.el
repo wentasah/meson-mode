@@ -256,6 +256,121 @@
 
 	))))
 
+(defconst meson-basic-kwargs
+  '("install"
+    "c_pch"
+    "cpp_pch"
+    "c_args"
+    "cpp_args"
+    "cs_args"
+    "vala_args"
+    "fortran_args"
+    "d_args"
+    "java_args"
+    "link_args"
+    "link_depends"
+    "link_with"
+    "include_directories"
+    "dependencies"
+    "install_dir"
+    "main_class"
+    "gui_app"
+    "extra_files"
+    "install_rpath"
+    "resources"
+    "sources"
+    "objects"
+    "native"
+    "build_by_default"
+    ))
+
+(defconst meson-kwargs
+  `(("executable"
+     . ,meson-basic-kwargs)
+    ("library"
+     . ,(append meson-basic-kwargs
+		'("version"		; Only for shared libs
+		  "soversion"		; Only for shared libs
+		  "name_prefix"
+		  "name_suffix"
+		  "vs_module_defs"	; Only for shared libs
+		  "vala_header"
+		  "vala_vapi"
+		  "vala_gir"
+		  "pic"			; Only for static libs
+		  )))
+    ("project"
+     . ("version"
+	"meson_version"
+	"default_options"))
+    ("run_target"
+     . ("command"
+	"depends"))
+    ("test"
+     . ("args"
+	"env"
+	"is_parallel"
+	"should_fail"
+	"valgring_args"
+	"timeout"
+	"workdir"))
+    ("vcs_tag"
+     . ("input"
+	"output"
+	"fallback"))
+    ("install_[[:alpha:]]+"
+     . ("install_dir"))
+    ("add_languages"
+     . ("required"))
+    ("add_test_setup"
+     . ("exe_wrapper"
+	"gdb"
+	"timeout_multiplier"
+	"env"))
+    ("benchmark"
+     . ("args"
+	"env"
+	"should_fail"
+	"valgring_args"
+	"timeout"
+	"workdir"))
+    ("configure_file"
+     . ("input"
+	"output"
+	"configuration"
+	"command"
+	"install_dir"))
+    ("custom_target"
+     . ("input"
+	"output"
+	"command"
+	"install"
+	"install_dir"
+	"build_always"
+	"capture"
+	"depends"
+	"depend_files"
+	"depfile"
+	"build_by_default"))
+    ("declare_dependency"
+     . ("include_directories"
+	"link_with"
+	"sources"
+	"dependencies"
+	"compile_args"
+	"link_args"
+	"version"))
+     ("dependency"
+      . ("modules"
+	 "required"
+	 "version"
+	 "native"
+	 "static"
+	 "fallback"
+	 "default_options"))
+     ))
+
+
 (eval-and-compile
   (defconst meson-multiline-string-regexp
     (rx "'''" (minimal-match (zero-or-more anything)) "'''"))
@@ -341,8 +456,29 @@ and LIMIT is used to limit the scan."
     (let* ((end (progn (skip-syntax-forward "w_")
 		       (point)))
 	   (start (progn (skip-syntax-backward "w_")
-			 (point))))
+			 (point)))
+	   (ppss (syntax-ppss)))
       (cond
+       ((or (nth 3 ppss)		; inside string
+	    (nth 4 ppss))		; inside comment
+	nil) ; nothing to complete
+
+       ;; kwargs
+       ((and (> (nth 0 ppss) 0)		; inside parentheses
+	     (eq (char-after (nth 1 ppss)) ?\()) ; rounded parentheses
+	(save-excursion
+	  (goto-char (nth 1 ppss))
+	  (let ((kwargs (cl-some (lambda (x)
+				   (when (looking-back (concat (car x) (rx (zero-or-more (any " " "\t"))))
+						       (line-beginning-position))
+				     (cdr x)))
+				 meson-kwargs)))
+	    ;; complete mathing kwargs as well as built-in
+	    ;; variables/functions
+	    (list start end (append kwargs meson-builtin-vars
+				    meson-builtin-functions)))))
+
+       ;; methods
        ((eq (char-before) ?.)
 	(let ((methods (cl-some
 			(lambda (x)
@@ -350,6 +486,7 @@ and LIMIT is used to limit the scan."
 			    (cdr x)))
 			meson-methods)))
 	  (list start end methods)))
+       ;; global things
        (t
         (list start end (append meson-keywords meson-builtin-vars
 				meson-builtin-functions)))))))
