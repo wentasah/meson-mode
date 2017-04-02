@@ -680,7 +680,11 @@ and LIMIT is used to limit the scan."
   )
 
 ;;;###autoload
-(add-to-list 'auto-mode-alist '("/meson\\.build\\'" . meson-mode))
+(progn
+  (add-to-list 'auto-mode-alist '("/meson\\.build\\'" . meson-mode))
+  (add-to-list 'compilation-error-regexp-alist 'meson)
+  (add-to-list 'compilation-error-regexp-alist-alist
+	       '(meson "^Meson encountered an error in file \\(.*\\), line \\([0-9]+\\), column \\([0-9]+\\):" 1 2 3)))
 
 (provide 'meson-mode)
 ;;; meson-mode.el ends here
