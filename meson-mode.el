@@ -258,7 +258,7 @@
 
 (eval-and-compile
   (defconst meson-multiline-string-regexp
-    (rx "'''" (zero-or-more anything) "'''"))
+    (rx "'''" (minimal-match (zero-or-more anything)) "'''"))
   (defconst meson-string-regexp
     (rx "'"
 	(zero-or-more
