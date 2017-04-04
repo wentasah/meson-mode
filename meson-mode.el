@@ -515,7 +515,7 @@ and LIMIT is used to limit the scan."
 		       (or (> (nth 0 ppss) 0) ; - inside parentheses
 			   (looking-back      ; - after operator
 			    meson-literate-tokens-regexp
-			    meson-literate-tokens-max-length)
+			    (- (point) meson-literate-tokens-max-length))
 			   (smie-indent--bolp-1)))) ; - at empty line
 	  (setq token 'unknown))
 	(when after-token
@@ -560,7 +560,7 @@ and LIMIT is used to limit the scan."
 		       (or (> (nth 0 ppss) 0) ; - inside parentheses
 			   (looking-back      ; - after operator
 			    meson-literate-tokens-regexp
-			    meson-literate-tokens-max-length)
+			    (- (point) meson-literate-tokens-max-length))
 			   (smie-indent--bolp-1)))) ;- at empty line
 	  (setq token 'unknown))))
     token))
