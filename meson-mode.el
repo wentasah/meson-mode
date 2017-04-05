@@ -496,9 +496,18 @@ and LIMIT is used to limit the scan."
 
 (require 'smie)
 
+(defun meson--comment-bolp (&optional ppss_)
+  "Return non-nil if point is at the beginning of line, ignoring
+comments."
+  (save-excursion
+    (let ((ppss (or ppss_
+		    (syntax-ppss))))
+      (when (nth 4 ppss) 		; inside comment
+	(goto-char (nth 8 ppss)))	; go to its beginning
+      (smie-rule-bolp))))
+
 (defun meson-smie-forward-token ()
-  (let ((token 'unknown)
-	(ppss (syntax-ppss)))
+  (let ((token 'unknown))
     (while (eq token 'unknown)
       (setq token
 	    (cond
@@ -507,8 +516,9 @@ and LIMIT is used to limit the scan."
 		       meson-token-spec))
 	     ((looking-at meson-literate-tokens-regexp)
 	      (match-string-no-properties 0))))
-      (let ((after-token (when token (match-end 0))))
-      ;; Skip certain tokens
+      (let ((after-token (when token (match-end 0)))
+	    (ppss (syntax-ppss)))
+	;; Skip certain tokens
 	(when (or (equal token "comment")
 		  (equal token "ignore")
 		  (and (equal token "eol")    ; Skip EOL when:
@@ -516,7 +526,7 @@ and LIMIT is used to limit the scan."
 			   (looking-back      ; - after operator
 			    meson-literate-tokens-regexp
 			    (- (point) meson-literate-tokens-max-length))
-			   (smie-indent--bolp-1)))) ; - at empty line
+			   (meson--comment-bolp ppss)))) ; - at empty line
 	  (setq token 'unknown))
 	(when after-token
 	  (goto-char after-token))))
@@ -552,7 +562,8 @@ and LIMIT is used to limit the scan."
 					 (- (point) meson-literate-tokens-max-length) t)
 			   (match-string-no-properties 0)))))
 		    (when tok
-		      (goto-char (match-beginning 0)))
+		      (goto-char (match-beginning 0))
+		      (setq ppss (syntax-ppss))) ; update ppss
 		    tok))))
 	(when (or (equal token "comment")
 		  (equal token "ignore")
@@ -561,7 +572,7 @@ and LIMIT is used to limit the scan."
 			   (looking-back      ; - after operator
 			    meson-literate-tokens-regexp
 			    (- (point) meson-literate-tokens-max-length))
-			   (smie-indent--bolp-1)))) ;- at empty line
+			   (meson--comment-bolp ppss)))) ;- at empty line
 	  (setq token 'unknown))))
     token))
 
