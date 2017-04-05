@@ -652,8 +652,6 @@ comments."
   :type 'integer)
 
 (defun meson-smie-rules (kind token)
-;;   (ignore-errors
-;;     (message "Parent: %s" (smie-indent--parent)))
   (pcase (cons kind token)
     (`(:elem . basic) meson-indent-basic)
     (`(:elem . args) 0)
