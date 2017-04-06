@@ -673,6 +673,7 @@ comments."
     (`(:list-intro . ,(or "eol" ":")) t)
     (`(:after . ":") meson-indent-basic)
     (`(:after . ,(or "=" "+=")) meson-indent-basic)
+    (`(:before . "[") (if (smie-rule-hanging-p) (smie-rule-parent)))
     (`(:before . "elif") (smie-rule-parent))
     (_ nil)))
 
