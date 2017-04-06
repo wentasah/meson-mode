@@ -41,6 +41,16 @@
 		    ?\n ">#"
 		    ?\' "\"'" ; See also meson-syntax-propertize-function
 		    ?\" "."
+		    ?\$ "."
+		    ?\& "."
+		    ?\* "."
+		    ?\+ "."
+		    ?\- "."
+		    ?\< "."
+		    ?\> "."
+		    ?\= "."
+		    ?\/ "."
+		    ?\| "."
 		    )))
     (while list
       (modify-syntax-entry (pop list) (pop list) table))
