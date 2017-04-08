@@ -517,8 +517,14 @@ comments."
       (smie-rule-bolp))))
 
 (defun meson-smie-forward-token ()
-  (let ((token 'unknown))
+  (let ((token 'unknown)
+	(ppss (syntax-ppss)))
     (while (eq token 'unknown)
+      ;; When inside a string or comment, go to the beginning so that
+      ;; regexp-based matching works correctly
+      (when (or (nth 3 ppss)		; inside string
+		(nth 4 ppss))		; inside comment
+	(goto-char (nth 8 ppss)))	; goto beginning
       (setq token
 	    (cond
 	     ((looking-at meson-keywords-regexp) (match-string-no-properties 0))
@@ -552,25 +558,30 @@ comments."
 	       ;; Skip comments
 	       ((nth 4 ppss)		 ; We are in a comment
 		(goto-char (nth 8 ppss)) ; goto its beginning
-		'unknown)
+		"comment")
 	       ;; Check for strings. Relying on syntactic parser allows us to
 	       ;; find the beginning of multi-line strings efficiently.
-	       ((equal (char-before) ?\')
-		(let* ((ppss- (syntax-ppss (1- (point))))
-		       (string-start (when (nth 3 ppss-)
-				       (nth 8 ppss-))))
-		  (goto-char string-start)
+	       ((nth 3 ppss)		; We're inside string or
+		(let ((string-start (nth 8 ppss)))
+		  (when (not (equal (point) string-start))
+		    (goto-char string-start)
+		    "string")))
+	       ((equal (char-before) ?\') ; We're just after a string
+		(let* ((ppss- (syntax-ppss (1- (point)))))
+		  (goto-char (nth 8 ppss-))
 		  "string"))
 	       ;; Regexp-based matching
 	       (t (let ((tok
 			 (cond
+			  ((looking-back (rx (any ")" "]")) (1- (point)))
+			   nil)		; Parentheses are better handled by syntactic parser
 			  ((looking-back meson-keywords-regexp (- (point) meson-keywords-max-length) t)
 			   (match-string-no-properties 0))
-			  ((cl-some (lambda (spec) (when (looking-back (cdr spec) eopl t) (car spec)))
-					  meson-token-spec))
 			  ((looking-back meson-literate-tokens-regexp
 					 (- (point) meson-literate-tokens-max-length) t)
-			   (match-string-no-properties 0)))))
+			   (match-string-no-properties 0))
+			  ((cl-some (lambda (spec) (when (looking-back (cdr spec) eopl t) (car spec)))
+					  meson-token-spec)))))
 		    (when tok
 		      (goto-char (match-beginning 0))
 		      (setq ppss (syntax-ppss))) ; update ppss
