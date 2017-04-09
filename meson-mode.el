@@ -390,18 +390,17 @@
 	 (or (not (any "'" "\\"))
 	     (seq "\\" nonl)))
 	"'")))
-(defconst meson-comment-regexp
-  (rx "#" (zero-or-more nonl)))
+
+(defconst meson-string-regexp
+  (rx (or (eval `(regexp ,meson-multiline-string-regexp))
+			 (eval `(regexp ,meson-string-regexp)))))
 
 (defconst meson-token-spec
   `(("ignore" . ,(rx (one-or-more (any " " "\t"))))
     ("id" . ,(rx (any "_" "a-z" "A-Z") (zero-or-more (any "_" "a-z" "A-Z" "0-9"))))
     ("number" . ,(rx (one-or-more (any digit))))
     ("eol_cont" . ,(rx "\\" "\n"))
-    ("eol" . "\n")
-    ("comment" . ,meson-comment-regexp)
-    ("string" . ,(rx (or (eval `(regexp ,meson-multiline-string-regexp))
-			 (eval `(regexp ,meson-string-regexp)))))))
+    ("eol" . "\n")))
 
 (defvar meson-mode-font-lock-keywords
   `((,meson-keywords-regexp . font-lock-keyword-face)
@@ -517,35 +516,52 @@ comments."
       (smie-rule-bolp))))
 
 (defun meson-smie-forward-token ()
-  (let ((token 'unknown)
-	(ppss (syntax-ppss)))
+  (let ((token 'unknown))
     (while (eq token 'unknown)
-      ;; When inside a string or comment, go to the beginning so that
-      ;; regexp-based matching works correctly
-      (when (or (nth 3 ppss)		; inside string
-		(nth 4 ppss))		; inside comment
-	(goto-char (nth 8 ppss)))	; goto beginning
-      (setq token
-	    (cond
-	     ((looking-at meson-keywords-regexp) (match-string-no-properties 0))
-	     ((cl-some (lambda (spec) (when (looking-at (cdr spec)) (car spec)))
-		       meson-token-spec))
-	     ((looking-at meson-literate-tokens-regexp)
-	      (match-string-no-properties 0))))
-      (let ((after-token (when token (match-end 0)))
-	    (ppss (syntax-ppss)))
-	;; Skip certain tokens
-	(when (or (equal token "comment")
-		  (equal token "ignore")
-		  (and (equal token "eol")    ; Skip EOL when:
-		       (or (> (nth 0 ppss) 0) ; - inside parentheses
-			   (looking-back      ; - after operator
-			    meson-literate-tokens-regexp
-			    (- (point) meson-literate-tokens-max-length))
-			   (meson--comment-bolp ppss)))) ; - at empty line
-	  (setq token 'unknown))
-	(when after-token
-	  (goto-char after-token))))
+      (let ((ppss (syntax-ppss)))
+	;; When inside or at start of a comment, goto end of line so
+	;; that we can still return "eol" token there.
+	(when (or (nth 4 ppss)
+		  (and (not (nth 3 ppss)) ; not inside string
+		       (looking-at "#")))
+	  (end-of-line)
+	  (setq ppss (syntax-ppss)))	; update ppss after move
+	;; Determine token but do not move behind it
+	(setq token
+	      (cond
+	       ;; Let syntactic parser handle parentheses (even inside
+	       ;; strings - this ensures that parentheses are NOT
+	       ;; indented inside strings according to meson
+	       ;; indentation rules)
+	       ((looking-at (rx (or (syntax open-parenthesis)
+				    (syntax close-parenthesis))))
+		"")
+	       ;; After handling parentheses (inside strings), we can
+	       ;; handle strings
+	       ((or (when (nth 3 ppss)		; If inside string
+		      (goto-char (nth 8 ppss))	; goto begining
+		      nil)
+		    (looking-at meson-string-regexp)) ; Match the whole string
+		"string")
+	       ((looking-at meson-keywords-regexp) (match-string-no-properties 0))
+	       ((cl-some (lambda (spec) (when (looking-at (cdr spec)) (car spec)))
+			 meson-token-spec))
+	       ((looking-at meson-literate-tokens-regexp)
+		(match-string-no-properties 0))))
+	;; Remember token end (except for parentheses)
+	(let ((after-token (when (< 0 (length token)) (match-end 0))))
+	  ;; Skip certain tokens
+	  (when (or (equal token "ignore")
+		    (and (equal token "eol")	; Skip EOL when:
+			 (or (> (nth 0 ppss) 0) ; - inside parentheses
+			     (and (looking-back	; - after operator but not inside comments
+				   meson-literate-tokens-regexp
+				   (- (point) meson-literate-tokens-max-length))
+				  (not (nth 4 ppss)))
+			     (meson--comment-bolp ppss)))) ; - at empty line
+	    (setq token 'unknown))
+	  (when after-token
+	    (goto-char after-token)))))
     token))
 
 (defun meson-smie-backward-token ()
@@ -553,12 +569,21 @@ comments."
     (while (eq token 'unknown)
       (let ((eopl (line-end-position 0)) ; end of previous line
 	    (ppss (syntax-ppss)))
+	;; Skip comments
+	(when (nth 4 ppss)		 ; We are in a comment
+	  (goto-char (nth 8 ppss))	 ; goto its beginning
+	  (setq ppss (syntax-ppss)))	 ; update ppss after move
 	(setq token
+	      ;; Determine token and move before it
 	      (cond
-	       ;; Skip comments
-	       ((nth 4 ppss)		 ; We are in a comment
-		(goto-char (nth 8 ppss)) ; goto its beginning
-		"comment")
+	       ;; Let syntactic parser handle parentheses (even inside
+	       ;; strings - this ensures that parentheses are NOT
+	       ;; indented inside strings according to meson
+	       ;; indentation rules)
+	       ((looking-back (rx (or (syntax open-parenthesis)
+				      (syntax close-parenthesis)))
+			      (1- (point)))
+		"")
 	       ;; Check for strings. Relying on syntactic parser allows us to
 	       ;; find the beginning of multi-line strings efficiently.
 	       ((nth 3 ppss)		; We're inside string or
@@ -572,27 +597,26 @@ comments."
 		  "string"))
 	       ;; Regexp-based matching
 	       (t (let ((tok
+			 ;; Determine token but do not move before it
 			 (cond
-			  ((looking-back (rx (any ")" "]")) (1- (point)))
-			   nil)		; Parentheses are better handled by syntactic parser
 			  ((looking-back meson-keywords-regexp (- (point) meson-keywords-max-length) t)
 			   (match-string-no-properties 0))
 			  ((looking-back meson-literate-tokens-regexp
 					 (- (point) meson-literate-tokens-max-length) t)
 			   (match-string-no-properties 0))
 			  ((cl-some (lambda (spec) (when (looking-back (cdr spec) eopl t) (car spec)))
-					  meson-token-spec)))))
+				    meson-token-spec)))))
 		    (when tok
-		      (goto-char (match-beginning 0))
+		      (goto-char (match-beginning 0)) ; Go before token now
 		      (setq ppss (syntax-ppss))) ; update ppss
 		    tok))))
-	(when (or (equal token "comment")
-		  (equal token "ignore")
+	(when (or (equal token "ignore")
 		  (and (equal token "eol")  ; Skip EOL when:
 		       (or (> (nth 0 ppss) 0) ; - inside parentheses
-			   (looking-back      ; - after operator
-			    meson-literate-tokens-regexp
-			    (- (point) meson-literate-tokens-max-length))
+			   (and (looking-back ; - after operator but not inside comments
+				 meson-literate-tokens-regexp
+				 (- (point) meson-literate-tokens-max-length))
+				(not (nth 4 ppss)))
 			   (meson--comment-bolp ppss)))) ;- at empty line
 	  (setq token 'unknown))))
     token))
