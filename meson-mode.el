@@ -394,7 +394,7 @@
   (rx "#" (zero-or-more nonl)))
 
 (defconst meson-token-spec
-  `(("ignore" . ,(rx (any " " "\t")))
+  `(("ignore" . ,(rx (one-or-more (any " " "\t"))))
     ("id" . ,(rx (any "_" "a-z" "A-Z") (zero-or-more (any "_" "a-z" "A-Z" "0-9"))))
     ("number" . ,(rx (one-or-more (any digit))))
     ("eol_cont" . ,(rx "\\" "\n"))
