@@ -708,11 +708,15 @@ comments."
     (`(,_ . ",") (smie-rule-separator kind))
     (`(,(or :before :after) . "eol") (if (smie-rule-parent-p "if" "foreach" "elif" "else")
 					 (smie-rule-parent meson-indent-basic)
-				       (smie-rule-parent)))
+				       (save-excursion
+					 (smie-indent-forward-token)
+					 (smie-backward-sexp 'halfsexp)
+					 (cons 'column (current-column)))))
     (`(:list-intro . ,(or "eol" ":")) t)
     (`(:after . ":") meson-indent-basic)
     (`(:after . ,(or "=" "+=")) meson-indent-basic)
     (`(:before . "[") (if (smie-rule-hanging-p) (smie-rule-parent)))
+    (`(:after . "[") (smie-rule-parent meson-indent-basic))
     (`(:before . "elif") (smie-rule-parent))
     (_ nil)))
 
