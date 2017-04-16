@@ -712,7 +712,7 @@ comments."
 					 (smie-indent-forward-token)
 					 (smie-backward-sexp 'halfsexp)
 					 (cons 'column (current-column)))))
-    (`(:list-intro . ,(or "eol" ":")) t)
+    (`(:list-intro . ,(or "eol" ":" "")) t) ; "" is actually "[" because that's what lexer returns
     (`(:after . ":") meson-indent-basic)
     (`(:after . ,(or "=" "+=")) meson-indent-basic)
     (`(:before . "[") (if (smie-rule-hanging-p) (smie-rule-parent)))
