@@ -715,8 +715,8 @@ comments."
     (`(:list-intro . ,(or "eol" ":" "")) t) ; "" is actually "[" because that's what lexer returns
     (`(:after . ":") meson-indent-basic)
     (`(:after . ,(or "=" "+=")) meson-indent-basic)
-    (`(:before . "[") (if (smie-rule-hanging-p) (smie-rule-parent)))
-    (`(:after . "[") (smie-rule-parent meson-indent-basic))
+    (`(:before . ,(or "[" "(")) (if (smie-rule-hanging-p) (smie-rule-parent)))
+    (`(:after . ,(or "[" "(")) (smie-rule-parent meson-indent-basic))
     (`(:before . "elif") (smie-rule-parent))
     (_ nil)))
 
