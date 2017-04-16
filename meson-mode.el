@@ -552,6 +552,7 @@ comments."
 	(let ((after-token (when (< 0 (length token)) (match-end 0))))
 	  ;; Skip certain tokens
 	  (when (or (equal token "ignore")
+		    (equal token "eol_cont")
 		    (and (equal token "eol")	; Skip EOL when:
 			 (or (> (nth 0 ppss) 0) ; - inside parentheses
 			     (and (looking-back	; - after operator but not inside comments
@@ -567,7 +568,9 @@ comments."
 (defun meson-smie-backward-token ()
   (let ((token 'unknown))
     (while (eq token 'unknown)
-      (let ((eopl (line-end-position 0)) ; end of previous line
+      (let ((eopl (max ;; end of previous line (to properly match "eol_cont" below it is actually a character before)
+		   (1- (line-end-position 0))
+		   (point-min)))
 	    (ppss (syntax-ppss)))
 	;; Skip comments
 	(when (nth 4 ppss)		 ; We are in a comment
@@ -611,6 +614,7 @@ comments."
 		      (setq ppss (syntax-ppss))) ; update ppss
 		    tok))))
 	(when (or (equal token "ignore")
+		  (equal token "eol_cont")
 		  (and (equal token "eol")  ; Skip EOL when:
 		       (or (> (nth 0 ppss) 0) ; - inside parentheses
 			   (and (looking-back ; - after operator but not inside comments
