@@ -775,9 +775,9 @@ endif
 run_command(py3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
 
 system_uid_max = run_command(
-                   awk,
-                   'BEGIN { uid=999 } /^\s*SYS_UID_MAX\s+/ { uid=$2 } END { print uid }',
-                   '/etc/login.defs').stdout()
+  awk,
+  'BEGIN { uid=999 } /^\s*SYS_UID_MAX\s+/ { uid=$2 } END { print uid }',
+  '/etc/login.defs').stdout()
 
 system_uid_max =
   run_command(
