@@ -745,7 +745,7 @@ comments."
 
 ;;;###autoload
 (progn
-  (add-to-list 'auto-mode-alist '("/meson\\.build\\'" . meson-mode))
+  (add-to-list 'auto-mode-alist '("/meson\\(\\.build\\|_options\\.txt\\)\\'" . meson-mode))
   (eval-after-load 'compile
     '(progn
        (add-to-list 'compilation-error-regexp-alist 'meson)
