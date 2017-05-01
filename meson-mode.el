@@ -99,8 +99,9 @@
       (zero-or-more whitespace)
       (or "(" line-end)))
 
-(defconst meson-builtin-vars
-  '("meson" "build_machine" "host_machine" "target_machine"))
+(eval-when-compile
+  (defconst meson-builtin-vars
+    '("meson" "build_machine" "host_machine" "target_machine")))
 
 (defconst meson-builtin-vars-regexp
   (rx symbol-start
