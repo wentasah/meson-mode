@@ -35,6 +35,8 @@
 
 ;;; Code:
 
+(require 'compile)
+
 (defvar meson-mode-syntax-table
   (let ((table (make-syntax-table))
 	(list (list ?\# "<"
