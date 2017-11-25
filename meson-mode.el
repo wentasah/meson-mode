@@ -478,17 +478,16 @@ and LIMIT is used to limit the scan."
        ;; kwargs
        ((and (> (nth 0 ppss) 0)		; inside parentheses
 	     (eq (char-after (nth 1 ppss)) ?\()) ; rounded parentheses
-	(save-excursion
-	  (goto-char (nth 1 ppss))
-	  (let ((kwargs (cl-some (lambda (x)
-				   (when (looking-back (concat (car x) (rx (zero-or-more (any " " "\t"))))
-						       (line-beginning-position))
-				     (cdr x)))
-				 meson-kwargs)))
-	    ;; complete mathing kwargs as well as built-in
-	    ;; variables/functions
-	    (list start end (append kwargs meson-builtin-vars
-				    meson-builtin-functions)))))
+	(goto-char (nth 1 ppss))
+	(let ((kwargs (cl-some (lambda (x)
+				 (when (looking-back (concat (car x) (rx (zero-or-more (any " " "\t"))))
+						     (line-beginning-position))
+				   (cdr x)))
+			       meson-kwargs)))
+	  ;; complete mathing kwargs as well as built-in
+	  ;; variables/functions
+	  (list start end (append kwargs meson-builtin-vars
+				  meson-builtin-functions))))
 
        ;; methods
        ((eq (char-before) ?.)
