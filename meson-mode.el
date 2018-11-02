@@ -99,7 +99,7 @@
       (zero-or-more whitespace)
       (or "(" line-end)))
 
-(eval-when-compile
+(eval-and-compile
   (defconst meson-builtin-vars
     '("meson" "build_machine" "host_machine" "target_machine")))
 
