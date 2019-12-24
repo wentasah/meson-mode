@@ -110,6 +110,10 @@
       (or (eval `(or ,@meson-builtin-vars)))
       symbol-end))
 
+(defconst meson-var-assign-regexp
+  (rx (group (any "_" "a-z" "A-Z") (zero-or-more (any "_" "a-z" "A-Z" "0-9")))
+      (zero-or-more whitespace) "=" (not (any "="))))
+
 (eval-and-compile
   (defconst meson-literate-tokens
     '( ;;"(" ")" "[" "]" ; Let syntactic parser handle these efficiently
@@ -408,7 +412,8 @@
 (defvar meson-mode-font-lock-keywords
   `((,meson-keywords-regexp . font-lock-keyword-face)
     (,meson-builtin-functions-regexp . (1 font-lock-builtin-face))
-    (,meson-builtin-vars-regexp . font-lock-variable-name-face)))
+    (,meson-builtin-vars-regexp . font-lock-variable-name-face)
+    (,meson-var-assign-regexp . (1 font-lock-variable-name-face))))
 
 (defconst meson-syntax-propertize-function
   (syntax-propertize-rules
