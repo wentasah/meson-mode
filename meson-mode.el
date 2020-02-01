@@ -1,6 +1,6 @@
 ;;; meson-mode.el --- Major mode for the Meson build system files  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2017  Michal Sojka
+;; Copyright (C) 2017, 2020  Michal Sojka
 
 ;; Author: Michal Sojka <sojkam1@fel.cvut.cz>
 ;; Version: 0.1
@@ -66,7 +66,8 @@
 
 (eval-and-compile
   (defconst meson-keywords
-    '("true" "false" "if" "else" "elif" "endif" "and" "or" "not" "foreach" "endforeach")))
+    '("true" "false" "if" "else" "elif" "endif" "and" "or" "not"
+      "foreach" "endforeach" "in" "continue" "break")))
 
 (defconst meson-keywords-regexp
   (rx symbol-start (eval `(or ,@meson-keywords)) symbol-end))
