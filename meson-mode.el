@@ -318,102 +318,145 @@
 
 	))))
 
-(defconst meson-basic-kwargs
-  '("install"
-    "c_pch"
-    "cpp_pch"
-    "c_args"
+(defconst meson--pch-kwargs '("c_pch" "cpp_pch"))
+
+(defconst meson--lang-arg-kwargs
+  '("c_args"
     "cpp_args"
-    "cs_args"
-    "vala_args"
-    "fortran_args"
+    "cuda_args"
     "d_args"
+    "d_import_dirs"
+    "d_unittest"
+    "d_module_versions"
+    "d_debug"
+    "fortran_args"
     "java_args"
+    "objc_args"
+    "objcpp_args"
+    "rust_args"
+    "vala_args"
+    "cs_args"))
+
+(defconst meson--vala-kwargs '("vala_header"  "vala_gir"  "vala_vapi"))
+(defconst meson--rust-kwargs '("rust_crate_type"))
+(defconst meson--cs-kwargs '("resources"  "cs_args"))
+
+(defconst meson--buildtarget-kwargs
+  '("build_by_default"
+    "build_rpath"
+    "dependencies"
+    "extra_files"
+    "gui_app"
+    "link_with"
+    "link_whole"
     "link_args"
     "link_depends"
-    "link_with"
+    "implicit_include_directories"
     "include_directories"
-    "dependencies"
-    "install_dir"
-    "main_class"
-    "gui_app"
-    "extra_files"
+    "install"
     "install_rpath"
-    "resources"
-    "sources"
-    "objects"
+    "install_dir"
+    "install_mode"
+    "name_prefix"
+    "name_suffix"
     "native"
-    "build_by_default"
+    "objects"
+    "override_options"
+    "sources"
+    "gnu_symbol_visibility"
     ))
 
+(defconst meson--known-build-target-kwargs
+  `(,@meson--buildtarget-kwargs
+    ,@meson--lang-arg-kwargs
+    ,@meson--pch-kwargs
+    ,@meson--vala-kwargs
+    ,@meson--rust-kwargs
+    ,@meson--cs-kwargs))
+
+(defconst meson--known-exe-kwargs
+  `(,@meson--known-build-target-kwargs "implib"  "export_dynamic"  "link_language"  "pie"))
+(defconst meson--known-shlib-kwargs
+  `(,@meson--known-build-target-kwargs "version"  "soversion"  "vs_module_defs"  "darwin_versions"))
+(defconst meson--known-shmod-kwargs
+  `(,@meson--known-build-target-kwargs "vs_module_defs"))
+(defconst meson--known-stlib-kwargs
+  `(,@meson--known-build-target-kwargs "pic"))
+(defconst meson--known-jar-kwargs
+  `(,@meson--known-exe-kwargs "main_class"))
+
+(defconst meson--known-library-kwargs
+  (cl-union meson--known-shlib-kwargs
+	    meson--known-stlib-kwargs))
+
+(defconst meson--base-test-args
+  '("args" "depends" "env" "should_fail" "timeout" "workdir" "suite" "priority" "protocol"))
+
 (defconst meson-kwargs
-  `(("executable"
-     . ,meson-basic-kwargs)
-    ("library"
-     . ,(append meson-basic-kwargs
-		'("version"		; Only for shared libs
-		  "soversion"		; Only for shared libs
-		  "name_prefix"
-		  "name_suffix"
-		  "vs_module_defs"	; Only for shared libs
-		  "vala_header"
-		  "vala_vapi"
-		  "vala_gir"
-		  "pic"			; Only for static libs
-		  )))
-    ("project"
-     . ("version"
-	"meson_version"
-	"default_options"))
-    ("run_target"
-     . ("command"
-	"depends"))
-    ("test"
-     . ("args"
-	"env"
-	"is_parallel"
-	"should_fail"
-	"valgring_args"
-	"timeout"
-	"workdir"))
-    ("vcs_tag"
-     . ("input"
-	"output"
-	"fallback"))
-    ("install_[[:alpha:]]+"
-     . ("install_dir"))
+  `(("add_global_arguments"
+     . ("language" "native"))
+    ("add_global_link_arguments"
+     . ("language" "native"))
     ("add_languages"
      . ("required"))
+    ("add_project_link_arguments"
+     . ("language" "native"))
+    ("add_project_arguments"
+     . ("language" "native"))
     ("add_test_setup"
-     . ("exe_wrapper"
-	"gdb"
-	"timeout_multiplier"
-	"env"))
+     . ("exe_wrapper" "gdb" "timeout_multiplier" "env" "is_default"))
     ("benchmark"
-     . ("args"
-	"env"
-	"should_fail"
-	"valgring_args"
-	"timeout"
-	"workdir"))
+     . ,meson--base-test-args)
+    ("build_target"
+     . ,meson--known-build-target-kwargs)
     ("configure_file"
      . ("input"
 	"output"
 	"configuration"
 	"command"
-	"install_dir"))
+	"copy"
+	"depfile"
+	"install_dir"
+	"install_mode"
+	"capture"
+	"install"
+	"format"
+	"output_format"
+	"encoding"))
     ("custom_target"
      . ("input"
 	"output"
 	"command"
 	"install"
 	"install_dir"
+	"install_mode"
 	"build_always"
 	"capture"
 	"depends"
 	"depend_files"
 	"depfile"
-	"build_by_default"))
+	"build_by_default"
+	"build_always_stale"
+	"console"))
+    ("dependency"
+     . ("default_options"
+	"embed"
+	"fallback"
+	"language"
+	"main"
+	"method"
+	"modules"
+	"cmake_module_path"
+	"optional_modules"
+	"native"
+	"not_found_message"
+	"required"
+	"static"
+	"version"
+	"private_headers"
+	"cmake_args"
+	"include_type"
+	))
     ("declare_dependency"
      . ("include_directories"
 	"link_with"
@@ -421,17 +464,57 @@
 	"dependencies"
 	"compile_args"
 	"link_args"
-	"version"))
-     ("dependency"
-      . ("modules"
-	 "required"
-	 "version"
-	 "native"
-	 "static"
-	 "fallback"
-	 "default_options"))
-     ))
-
+	"link_whole"
+	"version"
+	"variables"
+	))
+    ("executable"
+     . ,meson--known-exe-kwargs)
+    ("find_program"
+     . ("required" "native" "version" "dirs"))
+    ("generator"
+     . ("arguments"
+	"output"
+	"depends"
+	"depfile"
+	"capture"
+	"preserve_path_from"))
+    ("include_directories"
+     . ("is_system"))
+    ("install_data"
+     . ("install_dir" "install_mode" "rename" "sources"))
+    ("install_headers"
+     . ("install_dir" "install_mode" "subdir"))
+    ("install_man"
+     . ("install_dir" "install_mode"))
+    ("install_subdir"
+     . ("exclude_files" "exclude_directories" "install_dir" "install_mode" "strip_directory"))
+    ("jar"
+     . ,meson--known-jar-kwargs)
+    ("project"
+     . ("version" "meson_version" "default_options" "license" "subproject_dir"))
+    ("run_command"
+     . ("check" "capture" "env"))
+    ("run_target"
+     . ("command" "depends"))
+    ("shared_library"
+     . ,meson--known-shlib-kwargs)
+    ("shared_module"
+     . ,meson--known-shmod-kwargs)
+    ("static_library"
+     . ,meson--known-stlib-kwargs)
+    ("both_libraries"
+     . ,meson--known-library-kwargs)
+    ("library"
+     . ,meson--known-library-kwargs)
+    ("subdir"
+     . ("if_found"))
+    ("subproject"
+     . ("version" "default_options" "required"))
+    ("test"
+     . (,meson--base-test-args "is_parallel"))
+    ("vcs_tag"
+     . ("input" "output" "fallback" "command" "replace_string"))))
 
 (eval-and-compile
   (defconst meson-multiline-string-regexp
