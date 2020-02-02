@@ -833,7 +833,8 @@ comments."
 
 (defcustom meson-indent-basic 2
   "Indentation offset for meson.build files."
-  :type 'integer)
+  :type 'integer
+  :safe 'integerp)
 
 (defun meson-smie-rules (kind token)
   (pcase (cons kind token)
