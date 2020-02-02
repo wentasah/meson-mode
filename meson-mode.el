@@ -79,66 +79,65 @@
 
 (eval-and-compile
   (defconst meson-builtin-functions
-    '("add_global_arguments"
-      "add_global_link_arguments"
-      "add_languages"
-      "add_project_arguments"
-      "add_project_link_arguments"
-      "add_test_setup"
-      "alias_target"
-      "assert"
-      "benchmark"
-      "both_libraries"
-      "build_target"
-      "configuration_data"
-      "configure_file"
-      "custom_target"
-      "declare_dependency"
-      "dependency"
-      "disabler"
-      "environment"
-      "error"
-      "executable"
-      "files"
-      "find_library"
-      "find_program"
-      "generator"
-      "get_option"
-      "get_variable"
-      "gettext"
-      "import"
-      "include_directories"
-      "install_data"
-      "install_headers"
-      "install_man"
-      "install_subdir"
-      "is_disabler"
-      "is_variable"
-      "jar"
-      "join_paths"
-      "library"
-      "message"
-      "option"
-      "project"
-      "run_command"
-      "run_target"
-      "set_variable"
-      "shared_library"
-      "shared_module"
-      "static_library"
-      "subdir"
-      "subdir_done"
-      "subproject"
-      "summary"
-      "test"
-      "vcs_tag"
-      "warning"
-      )))
+    '(("add_global_arguments" :doc "void add_global_arguments(arg1, arg2, ...)")
+      ("add_global_link_arguments" :doc "void add_global_link_arguments(*arg1*, *arg2*, ...)")
+      ("add_languages" :doc "bool add_languages(*langs*)")
+      ("add_project_arguments" :doc "void add_project_arguments(arg1, arg2, ...)")
+      ("add_project_link_arguments" :doc "void add_project_link_arguments(*arg1*, *arg2*, ...)")
+      ("add_test_setup" :doc "void add_test_setup(*name*, ...)")
+      ("alias_target")
+      ("assert" :doc "void assert(*condition*, *message*)")
+      ("benchmark" :doc "void benchmark(name, executable, ...)")
+      ("both_libraries" :doc "buildtarget = both_libraries(library_name, list_of_sources, ...)")
+      ("build_target" :doc nil)
+      ("configuration_data" :doc "configuration_data_object = configuration_data(...)")
+      ("configure_file" :doc "generated_file = configure_file(...)")
+      ("custom_target" :doc "customtarget custom_target(*name*, ...)")
+      ("declare_dependency" :doc "dependency_object declare_dependency(...)")
+      ("dependency" :doc "dependency_object dependency(*dependency_name*, ...)")
+      ("disabler" :doc nil)
+      ("environment" :doc "environment_object environment(...)")
+      ("error" :doc "void error(message)")
+      ("executable" :doc "buildtarget executable(*exe_name*, *sources*, ...)")
+      ("files" :doc "file_array files(list_of_filenames)")
+      ("find_library" :doc nil)
+      ("find_program" :doc "program find_program(program_name1, program_name2, ...)")
+      ("generator" :doc "generator_object generator(*executable*, ...)")
+      ("get_option" :doc "value get_option(option_name)")
+      ("get_variable" :doc "value get_variable(variable_name, fallback)")
+      ("gettext")
+      ("import" :doc "module_object import(module_name)")
+      ("include_directories" :doc "include_object include_directories(directory_names, ...)")
+      ("install_data" :doc "void install_data(list_of_files, ...)")
+      ("install_headers" :doc "void install_headers(list_of_headers, ...)")
+      ("install_man" :doc "void install_man(list_of_manpages, ...)")
+      ("install_subdir" :doc "void install_subdir(subdir_name, install_dir : ..., exclude_files : ..., exclude_directories : ..., strip_directory : ...)")
+      ("is_disabler" :doc "bool is_disabler(var)")
+      ("is_variable" :doc "bool is_variable(varname)")
+      ("jar" :doc nil)
+      ("join_paths" :doc "string join_paths(string1, string2, ...)")
+      ("library" :doc "buildtarget library(library_name, list_of_sources, ...)")
+      ("message" :doc "void message(text)")
+      ("option")
+      ("project" :doc "void project(project_name, list_of_languages, ...)")
+      ("run_command" :doc "runresult run_command(command, list_of_args, ...)")
+      ("run_target")
+      ("set_variable" :doc "void set_variable(variable_name, value)")
+      ("shared_library" :doc "buildtarget shared_library(library_name, list_of_sources, ...)")
+      ("shared_module" :doc "buildtarget shared_module(module_name, list_of_sources, ...)")
+      ("static_library" :doc "buildtarget static_library(library_name, list_of_sources, ...)")
+      ("subdir" :doc "void subdir(dir_name, ...)")
+      ("subdir_done" :doc "subdir_done()")
+      ("subproject" :doc "subproject_object subproject(subproject_name, ...)")
+      ("summary" :doc "void summary(key, value)")
+      ("test" :doc "void test(name, executable, ...)")
+      ("vcs_tag" :doc "customtarget vcs_tag(...)")
+      ("warning" :doc "void warning(text)"))))
 
 (defconst meson-builtin-functions-regexp
   (rx (or line-start (not (any ".")))
       symbol-start
-      (group (eval `(or ,@meson-builtin-functions)))
+      (group (eval `(or ,@(mapcar 'car meson-builtin-functions))))
       symbol-end
       (zero-or-more whitespace)
       (or "(" line-end)))
@@ -620,7 +619,7 @@ and LIMIT is used to limit the scan."
 	  ;; complete mathing kwargs as well as built-in
 	  ;; variables/functions
 	  (list start end (append kwargs meson-builtin-vars
-				  meson-builtin-functions))))
+				  (mapcar 'car meson-builtin-functions)))))
 
        ;; methods
        ((eq (char-before) ?.)
@@ -633,7 +632,7 @@ and LIMIT is used to limit the scan."
        ;; global things
        (t
         (list start end (append meson-keywords meson-builtin-vars
-				meson-builtin-functions)))))))
+				(mapcar 'car meson-builtin-functions))))))))
 
 
 ;;; Indetation
@@ -860,6 +859,23 @@ comments."
     (`(:before . "elif") (smie-rule-parent))
     (_ nil)))
 
+(defun meson-eldoc-documentation-function ()
+  "`eldoc-documentation-function' (which see) for Meson mode."
+  (save-excursion
+    (let* ((end (progn (skip-syntax-forward "w_")
+		       (point)))
+	   (start (progn (skip-syntax-backward "w_")
+			 (point)))
+	   (ppss (syntax-ppss)))
+      (cond
+       ((or (nth 3 ppss)		; inside string
+	    (nth 4 ppss))		; inside comment
+	nil) ; nothing to complete
+       ((cl-some (lambda (func)
+		   (when  (looking-at (car func))
+		     (plist-get (cdr func) :doc)))
+		 meson-builtin-functions))))))
+
 ;;; Mode definition
 
 ;;;###autoload
@@ -881,6 +897,8 @@ comments."
   (smie-setup meson-smie-grammar #'meson-smie-rules
 	      :forward-token #'meson-smie-forward-token
 	      :backward-token #'meson-smie-backward-token)
+  (add-function :before-until (local 'eldoc-documentation-function)
+                #'meson-eldoc-documentation-function)
   )
 
 ;;;###autoload
