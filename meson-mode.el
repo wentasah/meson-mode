@@ -593,6 +593,31 @@ and LIMIT is used to limit the scan."
            (put-text-property quote-starting-pos quote-ending-pos
                               'syntax-table (string-to-syntax "|"))))))
 
+(defun meson-function-at-point ()
+  "Return name of the function under point.
+The point can be anywhere within function name or argument list."
+  (save-excursion
+    (skip-syntax-backward "w_")
+    (let ((ppss (syntax-ppss))
+	  (functions (mapcar 'car meson-builtin-functions)))
+      (cond
+       ((or (nth 3 ppss)		; inside string
+	    (nth 4 ppss))		; inside comment
+	(goto-char (nth 8 ppss))	; go to the beginning
+	(meson-function-at-point))
+       ((cl-some (lambda (fname) (when (looking-at fname) fname)) functions))
+       ((and (> (nth 0 ppss) 0)			 ; inside parentheses
+	     (eq (char-after (nth 1 ppss)) ?\()) ; rounded parentheses
+	(goto-char (nth 1 ppss))
+	(cl-some (lambda (fname)
+		   (when (looking-back (concat fname (rx (zero-or-more (any " " "\t"))))
+				       (line-beginning-position))
+		     fname))
+		 functions))
+       ((> (nth 0 ppss) 1)		; inside nested parentheses - other than rounded
+	(goto-char (nth 1 ppss))
+	(meson-function-at-point))))))
+
 ;;; Completion
 
 (defun meson-completion-at-point-function ()
@@ -862,20 +887,9 @@ comments."
 
 (defun meson-eldoc-documentation-function ()
   "`eldoc-documentation-function' (which see) for Meson mode."
-  (save-excursion
-    (let* ((end (progn (skip-syntax-forward "w_")
-		       (point)))
-	   (start (progn (skip-syntax-backward "w_")
-			 (point)))
-	   (ppss (syntax-ppss)))
-      (cond
-       ((or (nth 3 ppss)		; inside string
-	    (nth 4 ppss))		; inside comment
-	nil) ; nothing to complete
-       ((cl-some (lambda (func)
-		   (when  (looking-at (car func))
-		     (plist-get (cdr func) :doc)))
-		 meson-builtin-functions))))))
+  (if-let* ((fname (meson-function-at-point))
+	    (fspec (alist-get fname meson-builtin-functions)))
+      (plist-get fspec :doc)))
 
 ;;; Mode definition
 
