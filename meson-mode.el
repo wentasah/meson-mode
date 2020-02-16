@@ -861,6 +861,12 @@ comments."
   :type 'integer
   :safe 'integerp)
 
+(defcustom meson-markdown-docs-dir (seq-find 'file-exists-p
+					     '("/usr/share/doc/meson/markdown"
+					       "~/src/meson/docs/markdown"))
+  "Directory containing Meson markdown-formated documentation."
+  :type 'directory)
+
 (defun meson-smie-rules (kind token)
   (pcase (cons kind token)
     (`(:elem . basic) meson-indent-basic)
@@ -885,17 +891,49 @@ comments."
     (`(:before . "elif") (smie-rule-parent))
     (_ nil)))
 
+;;; Documentation
+
 (defun meson-eldoc-documentation-function ()
   "`eldoc-documentation-function' (which see) for Meson mode."
   (if-let* ((fname (meson-function-at-point))
 	    (fspec (alist-get fname meson-builtin-functions)))
       (plist-get fspec :doc)))
 
+(defun meson-lookup-doc (what)
+  "Open Meson reference manual and find heading starting with WHAT."
+  (when-let (refman (seq-find 'file-exists-p
+			      (mapcar (lambda (file) (concat meson-markdown-docs-dir "/" file))
+				      '("Reference-manual.md"
+					"Reference-manual.md.gz"))))
+    (find-file-read-only refman)
+    (when (and (fboundp 'markdown-view-mode)
+	       (not (eq major-mode 'markdown-view-mode)))
+      (markdown-view-mode))
+    (local-set-key (kbd "q") 'bury-buffer)
+    (goto-char (point-min))
+    (re-search-forward (concat "^#+ " what))
+    (recenter 0)))
+
+(defun meson-lookup-doc-at-point ()
+  "Show Meson documentation related to current point.
+Currently, it shows something only for functions."
+  (interactive)
+  (if-let ((func (meson-function-at-point)))
+      (meson-lookup-doc func)
+    (message "Nothing to look up")))
+
 ;;; Mode definition
+
+(defvar meson-mode-map
+       (let ((map (make-sparse-keymap)))
+         (define-key map [f1] 'meson-lookup-doc-at-point)
+         map)
+       "Keymap for `meson-mode'.")
 
 ;;;###autoload
 (define-derived-mode meson-mode prog-mode "Meson"
-  "Major mode for editing Meson build system files."
+  "Major mode for editing Meson build system files.
+\\{meson-mode-map}"
   :abbrev-table nil
   (setq font-lock-defaults
 	'(meson-mode-font-lock-keywords
