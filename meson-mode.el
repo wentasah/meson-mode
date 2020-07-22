@@ -6,7 +6,7 @@
 ;; Version: 0.2
 ;; Keywords: languages, tools
 ;; URL: https://github.com/wentasah/meson-mode
-;; Package-Requires: ((emacs "24.3"))
+;; Package-Requires: ((emacs "26.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
