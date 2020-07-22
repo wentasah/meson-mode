@@ -665,8 +665,7 @@ The point can be anywhere within function name or argument list."
 (require 'smie)
 
 (defun meson--comment-bolp (&optional ppss_)
-  "Return non-nil if point is at the beginning of line, ignoring
-comments."
+  "Return non-nil if point is at the beginning of line, ignoring comments."
   (save-excursion
     (let ((ppss (or ppss_
 		    (syntax-ppss))))
