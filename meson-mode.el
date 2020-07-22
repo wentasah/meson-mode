@@ -36,6 +36,7 @@
 ;;; Code:
 
 (require 'compile)
+(eval-when-compile (require 'subr-x))
 
 (defvar meson-mode-syntax-table
   (let ((table (make-syntax-table))
