@@ -36,6 +36,7 @@
 ;;; Code:
 
 (require 'compile)
+(require 'seq)
 (eval-when-compile (require 'subr-x))
 
 (defvar meson-mode-syntax-table
@@ -53,8 +54,7 @@
 		    ?\> "."
 		    ?\= "."
 		    ?\/ "."
-		    ?\| "."
-		    )))
+		    ?\| ".")))
     (while list
       (modify-syntax-entry (pop list) (pop list) table))
     table)
@@ -314,9 +314,7 @@
 	;; array
 	"length"
 	"contains"
-	"get"
-
-	))))
+	"get"))))
 
 (defconst meson--pch-kwargs '("c_pch" "cpp_pch"))
 
@@ -363,8 +361,7 @@
     "objects"
     "override_options"
     "sources"
-    "gnu_symbol_visibility"
-    ))
+    "gnu_symbol_visibility"))
 
 (defconst meson--known-build-target-kwargs
   `(,@meson--buildtarget-kwargs
@@ -455,8 +452,7 @@
 	"version"
 	"private_headers"
 	"cmake_args"
-	"include_type"
-	))
+	"include_type"))
     ("declare_dependency"
      . ("include_directories"
 	"link_with"
@@ -466,8 +462,7 @@
 	"link_args"
 	"link_whole"
 	"version"
-	"variables"
-	))
+	"variables"))
     ("executable"
      . ,meson--known-exe-kwargs)
     ("find_program"
@@ -665,10 +660,11 @@ The point can be anywhere within function name or argument list."
 
 (require 'smie)
 
-(defun meson--comment-bolp (&optional ppss_)
-  "Return non-nil if point is at the beginning of line, ignoring comments."
+(defun meson--comment-bolp (&optional syn-ppss)
+  "Return non-nil if point is at the beginning of line, ignoring comments.
+Optional SYN-PPSS is the value returned by `syntax-ppss'."
   (save-excursion
-    (let ((ppss (or ppss_
+    (let ((ppss (or syn-ppss
 		    (syntax-ppss))))
       (when (nth 4 ppss) 		; inside comment
 	(goto-char (nth 8 ppss)))	; go to its beginning
@@ -796,8 +792,7 @@ The point can be anywhere within function name or argument list."
 	    ("foreach" foreachblock "endforeach"))
       (foreachblock (id ":" exp "eol" codeblock))
       (ifblock (exp "eol" codeblock)
-	       (exp "eol" codeblock "elif" ifblock)
-	       )
+	       (exp "eol" codeblock "elif" ifblock))
       (exp (exp "," exp)
 	   (id ":" exp)
 	   (exp "+=" exp)
@@ -847,9 +842,7 @@ The point can be anywhere within function name or argument list."
       (assoc "==" "!=" "<" "<=" ">" ">=")
       (assoc "+" "-")
       (assoc "*" "/" "%")
-      (assoc ".")
-      )
-    )))
+      (assoc ".")))))
 
 (defgroup meson nil
   "Meson build system mode for Emacs."
@@ -937,8 +930,7 @@ Currently, it shows something only for functions."
   :abbrev-table nil
   (setq font-lock-defaults
 	'(meson-mode-font-lock-keywords
-	  nil nil nil nil
-	  ))
+	  nil nil nil nil))
 
   (set (make-local-variable 'syntax-propertize-function)
        meson-syntax-propertize-function)
@@ -951,8 +943,7 @@ Currently, it shows something only for functions."
 	      :forward-token #'meson-smie-forward-token
 	      :backward-token #'meson-smie-backward-token)
   (add-function :before-until (local 'eldoc-documentation-function)
-                #'meson-eldoc-documentation-function)
-  )
+                #'meson-eldoc-documentation-function))
 
 ;;;###autoload
 (progn
