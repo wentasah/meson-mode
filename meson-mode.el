@@ -895,7 +895,7 @@ Optional SYN-PPSS is the value returned by `syntax-ppss'."
 (defun meson-lookup-doc (what)
   "Open Meson reference manual and find heading starting with WHAT."
   (when-let (refman (seq-find 'file-exists-p
-			      (mapcar (lambda (file) (concat meson-markdown-docs-dir "/" file))
+			      (mapcar (lambda (file) (expand-file-name file meson-markdown-docs-dir))
 				      '("Reference-manual.md"
 					"Reference-manual.md.gz"))))
     (find-file-read-only refman)
