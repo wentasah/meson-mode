@@ -901,7 +901,7 @@ arguments."
       (plist-get fspec :doc)))
 
 (defun meson-lookup-doc (what)
-  "Open Meson reference manual and find heading starting with WHAT."
+  "Open Meson reference manual and find the function or object named WHAT."
   (when-let (refman (seq-find 'file-exists-p
 			      (mapcar (lambda (file) (expand-file-name file meson-markdown-docs-dir))
 				      '("Reference-manual.md"
@@ -912,7 +912,8 @@ arguments."
       (markdown-view-mode))
     (local-set-key (kbd "q") 'bury-buffer)
     (goto-char (point-min))
-    (re-search-forward (concat "^#+ " what))
+    (let ((what-rx (regexp-quote what)))
+      (re-search-forward (concat "^\\(?:- `" what-rx "(\\|#+ \\(?:" what-rx "()\\|`" what-rx "`\\)\\)")))
     (recenter 0)))
 
 (defun meson-lookup-doc-at-point ()
