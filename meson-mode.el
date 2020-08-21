@@ -540,7 +540,7 @@
 
 (defconst meson-syntax-propertize-function
   (syntax-propertize-rules
-   ((rx (or "'''" "'")) (0 (ignore (meson-syntax-stringify))))))
+   ((rx (or "'''" "'")) (0 (ignore (meson--syntax-stringify))))))
 
 (defsubst meson-syntax-count-quotes (&optional point limit)
   "Count number of quotes after point (max is 3).
@@ -554,7 +554,7 @@ and LIMIT is used to limit the scan."
       (setq i (1+ i)))
     i))
 
-(defun meson-syntax-stringify ()
+(defun meson--syntax-stringify ()
   "Put `syntax-table' property correctly on single/triple apostrophes."
   ;; Inspired by python-mode
   (let* ((num-quotes (length (match-string-no-properties 0)))
@@ -886,7 +886,7 @@ Optional SYN-PPSS is the value returned by `syntax-ppss'."
 
 ;;; Documentation
 
-(defun meson-eldoc-documentation-function ()
+(defun meson--eldoc-documentation-function ()
   "`eldoc-documentation-function' (which see) for Meson mode."
   (if-let* ((fname (meson-function-at-point))
 	    (fspec (alist-get fname meson-builtin-functions)))
@@ -943,7 +943,7 @@ Currently, it shows something only for functions."
 	      :forward-token #'meson-smie-forward-token
 	      :backward-token #'meson-smie-backward-token)
   (add-function :before-until (local 'eldoc-documentation-function)
-                #'meson-eldoc-documentation-function))
+                #'meson--eldoc-documentation-function))
 
 ;;;###autoload
 (progn
