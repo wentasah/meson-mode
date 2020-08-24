@@ -925,6 +925,7 @@ Return either `line-beginning-position' of the matching line or nil."
 (defun meson-lookup-doc (identifier)
   "Open Meson reference manual and find the function or object named IDENTIFIER.
 Return the buffer containing the reference manual or nil."
+  (interactive (list (thing-at-point 'symbol)))
   (when-let* ((refman (meson--find-reference-manual))
 	      (buf (find-file-noselect refman))
 	      (pos (with-current-buffer buf
