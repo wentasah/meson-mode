@@ -922,21 +922,25 @@ Return either `line-beginning-position' of the matching line or nil."
   (and (re-search-forward (meson--make-lookup-regexp identifier) nil t)
        (line-beginning-position)))
 
-(defun meson-lookup-doc (what)
-  "Open Meson reference manual and find the function or object named WHAT."
-  (when-let (refman (seq-find 'file-exists-p
-			      (mapcar (lambda (file) (expand-file-name file meson-markdown-docs-dir))
-				      '("Reference-manual.md"
-					"Reference-manual.md.gz"))))
-    (find-file-read-only refman)
+(defun meson-lookup-doc (identifier)
+  "Open Meson reference manual and find the function or object named IDENTIFIER.
+Return the buffer containing the reference manual or nil."
+  (when-let* ((refman (meson--find-reference-manual))
+	      (buf (find-file-noselect refman))
+	      (pos (with-current-buffer buf
+		     (meson--search-in-reference-manual identifier))))
+    (pop-to-buffer buf)
+    (rename-buffer "*Meson Reference Manual*" 'unique)
+    (read-only-mode)
     (when (and (fboundp 'markdown-view-mode)
 	       (not (eq major-mode 'markdown-view-mode)))
       (markdown-view-mode))
     (local-set-key (kbd "q") 'bury-buffer)
-    (goto-char (point-min))
-    (let ((what-rx (regexp-quote what)))
-      (re-search-forward (concat "^\\(?:- `" what-rx "(\\|#+ \\(?:" what-rx "()\\|`" what-rx "`\\)\\)")))
-    (recenter 0)))
+    (when (bound-and-true-p evil-mode)
+      (evil-local-set-key 'normal (kbd "q") 'bury-buffer))
+    (goto-char pos)
+    (recenter 0)
+    (current-buffer)))
 
 (defun meson-lookup-doc-at-point ()
   "Show Meson documentation related to current point.
