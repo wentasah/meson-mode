@@ -943,19 +943,13 @@ Return the buffer containing the reference manual or nil."
     (recenter 0)
     (current-buffer)))
 
-(defun meson-lookup-doc-at-point ()
-  "Show Meson documentation related to current point.
-Currently, it shows something only for functions."
-  (interactive)
-  (if-let ((func (meson-function-at-point)))
-      (meson-lookup-doc func)
-    (message "Nothing to look up")))
+(defalias 'meson-lookup-doc-at-point (symbol-function 'meson-lookup-doc))
 
 ;;; Mode definition
 
 (defvar meson-mode-map
        (let ((map (make-sparse-keymap)))
-         (define-key map [f1] 'meson-lookup-doc-at-point)
+         (define-key map [f1] 'meson-lookup-doc)
          map)
        "Keymap for `meson-mode'.")
 
