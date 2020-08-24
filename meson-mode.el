@@ -900,6 +900,28 @@ arguments."
 	    (fspec (alist-get fname meson-builtin-functions)))
       (plist-get fspec :doc)))
 
+(defun meson--find-reference-manual ()
+  "Return the absolute filename of the Meson reference manual or nil."
+  (let ((default-directory meson-markdown-docs-dir))
+    (when-let (manual (seq-find #'file-exists-p '("Reference-manual.md"
+                                                  "Reference-manual.md.gz")))
+      (expand-file-name manual))))
+
+(defun meson--make-lookup-regexp (identifier)
+  "Make regexp for looking up IDENTIFIER in the Meson reference manual."
+  (rx bol (or (+ ?#) ?-) ?  (? ?`)
+      ;; This would be (literal identifier) in Emacs 27.1+.
+      (regexp (regexp-quote identifier))
+      (or ?\( ?` eol)))
+
+(defun meson--search-in-reference-manual (identifier)
+  "Search for the function or object IDENTIFIER in the current buffer.
+The current buffer is assumed to contain the Meson reference manual.
+Return either `line-beginning-position' of the matching line or nil."
+  (goto-char (point-min))
+  (and (re-search-forward (meson--make-lookup-regexp identifier) nil t)
+       (line-beginning-position)))
+
 (defun meson-lookup-doc (what)
   "Open Meson reference manual and find the function or object named WHAT."
   (when-let (refman (seq-find 'file-exists-p
