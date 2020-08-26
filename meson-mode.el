@@ -61,6 +61,8 @@
   "Syntax table used while in `meson-mode'.")
 
 (defun meson--max-length (&rest args)
+  "Return maximum length among strings in ARGS.
+If some arguments are numbers, threat them as string lengths."
   (let ((lengths
 	 (mapcar (lambda (x) (if (stringp x) (length x) x)) args)))
     (apply 'max lengths)))
@@ -617,6 +619,7 @@ The point can be anywhere within function name or argument list."
 ;;; Completion
 
 (defun meson-completion-at-point-function ()
+  "Return possible completion candidates."
   (save-excursion
     (let* ((end (progn (skip-syntax-forward "w_")
 		       (point)))
@@ -671,6 +674,7 @@ Optional SYN-PPSS is the value returned by `syntax-ppss'."
       (smie-rule-bolp))))
 
 (defun meson-smie-forward-token ()
+  "Move forward by one lexer token."
   (let ((token 'unknown))
     (while (eq token 'unknown)
       (let ((ppss (syntax-ppss)))
@@ -721,6 +725,7 @@ Optional SYN-PPSS is the value returned by `syntax-ppss'."
     token))
 
 (defun meson-smie-backward-token ()
+  "Move backward by one lexer token."
   (let ((token 'unknown))
     (while (eq token 'unknown)
       (let ((eopl (max ;; end of previous line (to properly match "eol_cont" below it is actually a character before)
@@ -861,6 +866,9 @@ Optional SYN-PPSS is the value returned by `syntax-ppss'."
   :type 'directory)
 
 (defun meson-smie-rules (kind token)
+  "Indentation rules for the SMIE engine.
+See the SMIE documentation for the meaning of KIND and TOKEN
+arguments."
   (pcase (cons kind token)
     (`(:elem . basic) meson-indent-basic)
     (`(:elem . args) (- (save-excursion (beginning-of-line-text) (point)) (point)))
