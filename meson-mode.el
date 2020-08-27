@@ -927,10 +927,12 @@ Return either `line-beginning-position' of the matching line or nil."
   "Open Meson reference manual and find the function or object named IDENTIFIER.
 Return the buffer containing the reference manual or nil."
   (interactive (list (or (meson-function-at-point) (thing-at-point 'symbol))))
-  (when-let* ((refman (meson--find-reference-manual))
-	      (buf (find-file-noselect refman))
-	      (pos (with-current-buffer buf
-		     (meson--search-in-reference-manual identifier))))
+  (let* ((refman (or (meson--find-reference-manual)
+                     (user-error "Meson reference manual not found")))
+         (buf (find-file-noselect refman))
+         (pos (or (with-current-buffer buf
+                    (meson--search-in-reference-manual identifier))
+                  (user-error "%s not found in Meson reference manual" identifier))))
     (pop-to-buffer buf)
     (rename-buffer "*Meson Reference Manual*" 'unique)
     (read-only-mode)
