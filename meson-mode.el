@@ -909,10 +909,11 @@ arguments."
 
 (defun meson--make-lookup-regexp (identifier)
   "Make regexp for looking up IDENTIFIER in the Meson reference manual."
-  (rx bol (or (+ ?#) ?-) ?  (? ?`)
-      ;; This would be (literal identifier) in Emacs 27.1+.
-      (regexp (regexp-quote identifier))
-      (or ?\( ?` eol)))
+  (rx-to-string
+   `(and bol (or (+ ?#) ?-) ?  (? ?`)
+         ;; This would be (literal identifier) in Emacs 27.1+.
+         ,(regexp-quote identifier)
+         (or ?\( ?` eol))))
 
 (defun meson--search-in-reference-manual (identifier)
   "Search for the function or object IDENTIFIER in the current buffer.
