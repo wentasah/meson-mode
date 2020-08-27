@@ -937,7 +937,7 @@ Return the buffer containing the reference manual or nil."
     (rename-buffer "*Meson Reference Manual*" 'unique)
     (read-only-mode)
     (when (and (fboundp 'markdown-view-mode)
-	       (not (eq major-mode 'markdown-view-mode)))
+               (not (eq major-mode 'markdown-view-mode)))
       (markdown-view-mode))
     (local-set-key (kbd "q") 'bury-buffer)
     (when (bound-and-true-p evil-mode)
