@@ -925,7 +925,9 @@ Return either `line-beginning-position' of the matching line or nil."
 (defun meson-lookup-doc (identifier)
   "Open Meson reference manual and find the function or object named IDENTIFIER.
 Return the buffer containing the reference manual or nil."
-  (interactive (list (or (meson-function-at-point) (thing-at-point 'symbol))))
+  (interactive (list (or (thing-at-point 'symbol)
+                         (meson-function-at-point)
+                         (user-error "No identifier at point"))))
   (let* ((refman (or (meson--find-reference-manual)
                      (user-error "Meson reference manual not found")))
          (buf (find-file-noselect refman))
