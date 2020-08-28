@@ -911,7 +911,8 @@ arguments."
   "Make regexp for looking up IDENTIFIER in the Meson reference manual."
   ;; In Emacs 27 this could be simplified to (rx ... (literal identifier) ...).
   (rx-to-string
-   `(seq bol (or (+ ?#) ?-) ?  (? ?`) ,identifier (or ?\( ?` eol))))
+   `(seq bol (or (seq (+ ?#) ?  (? ?`) ,identifier (or ?\( ?` eol))
+                 (seq "- `" ,identifier ?\()))))
 
 (defun meson--search-in-reference-manual (identifier)
   "Search for the function or object IDENTIFIER in the current buffer.
