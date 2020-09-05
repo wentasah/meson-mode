@@ -945,7 +945,7 @@ Return the buffer containing the reference manual or nil."
       (evil-local-set-key 'normal (kbd "q") 'bury-buffer))
     (goto-char pos)
     (recenter 0)
-    (current-buffer)))
+    buf))
 
 (defalias 'meson-lookup-doc-at-point (symbol-function 'meson-lookup-doc))
 
