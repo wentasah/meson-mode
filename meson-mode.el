@@ -934,16 +934,19 @@ Return the buffer containing the reference manual or nil."
          (pos (or (with-current-buffer buf
                     (meson--search-in-reference-manual identifier))
                   (user-error "%s not found in Meson reference manual" identifier))))
+    (with-current-buffer buf
+      ;; Set up buffer only once after creation.
+      (unless (string= (buffer-name) "*Meson Reference Manual*")
+        (rename-buffer "*Meson Reference Manual*" 'unique)
+        (read-only-mode)
+        (when (and (fboundp 'markdown-view-mode)
+                   (not (eq major-mode 'markdown-view-mode)))
+          (markdown-view-mode))
+        (local-set-key (kbd "q") 'bury-buffer)
+        (when (bound-and-true-p evil-mode)
+          (evil-local-set-key 'normal (kbd "q") 'bury-buffer)))
+      (goto-char pos))
     (switch-to-buffer buf)
-    (rename-buffer "*Meson Reference Manual*" 'unique)
-    (read-only-mode)
-    (when (and (fboundp 'markdown-view-mode)
-               (not (eq major-mode 'markdown-view-mode)))
-      (markdown-view-mode))
-    (local-set-key (kbd "q") 'bury-buffer)
-    (when (bound-and-true-p evil-mode)
-      (evil-local-set-key 'normal (kbd "q") 'bury-buffer))
-    (goto-char pos)
     (recenter 0)
     buf))
 
