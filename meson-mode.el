@@ -928,12 +928,9 @@ Return the buffer containing the reference manual or nil."
   (interactive (list (or (thing-at-point 'symbol)
                          (meson-function-at-point)
                          (user-error "No identifier at point"))))
-  (let* ((refman (or (meson--find-reference-manual)
-                     (user-error "Meson reference manual not found")))
-         (buf (find-file-noselect refman))
-         (pos (or (with-current-buffer buf
-                    (meson--search-in-reference-manual identifier))
-                  (user-error "%s not found in Meson reference manual" identifier))))
+  (let ((buf (find-file-noselect
+              (or (meson--find-reference-manual)
+                  (user-error "Meson reference manual not found")))))
     (with-current-buffer buf
       ;; Set up buffer only once after creation.
       (unless (string= (buffer-name) "*Meson Reference Manual*")
@@ -945,7 +942,9 @@ Return the buffer containing the reference manual or nil."
         (local-set-key (kbd "q") 'bury-buffer)
         (when (bound-and-true-p evil-mode)
           (evil-local-set-key 'normal (kbd "q") 'bury-buffer)))
-      (goto-char pos))
+      (goto-char
+       (or (meson--search-in-reference-manual identifier)
+           (user-error "%s not found in Meson reference manual" identifier))))
     (switch-to-buffer buf)
     (recenter 0)
     buf))
