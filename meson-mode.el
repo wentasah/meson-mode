@@ -934,7 +934,7 @@ Return the buffer containing the reference manual or nil."
          (pos (or (with-current-buffer buf
                     (meson--search-in-reference-manual identifier))
                   (user-error "%s not found in Meson reference manual" identifier))))
-    (pop-to-buffer buf)
+    (switch-to-buffer buf)
     (rename-buffer "*Meson Reference Manual*" 'unique)
     (read-only-mode)
     (when (and (fboundp 'markdown-view-mode)
