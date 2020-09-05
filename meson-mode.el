@@ -923,8 +923,11 @@ Return either `line-beginning-position' of the matching line or nil."
        (line-beginning-position)))
 
 (defun meson-lookup-doc (identifier)
-  "Open Meson reference manual and find the function or object named IDENTIFIER.
-Return the buffer containing the reference manual or nil."
+  "Open Meson reference manual and find IDENTIFIER.
+Return the buffer containing the reference manual.
+IDENTIFIER is the name of a Meson function or object as a string.
+Signal a `user-error' if the manual could not be found
+or does not contain IDENTIFIER."
   (interactive (list (or (thing-at-point 'symbol)
                          (meson-function-at-point)
                          (user-error "No identifier at point"))))
