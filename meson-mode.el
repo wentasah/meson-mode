@@ -900,34 +900,66 @@ arguments."
 	    (fspec (alist-get fname meson-builtin-functions)))
       (plist-get fspec :doc)))
 
-(defun meson-lookup-doc (what)
-  "Open Meson reference manual and find heading starting with WHAT."
-  (when-let (refman (seq-find 'file-exists-p
-			      (mapcar (lambda (file) (expand-file-name file meson-markdown-docs-dir))
-				      '("Reference-manual.md"
-					"Reference-manual.md.gz"))))
-    (find-file-read-only refman)
-    (when (and (fboundp 'markdown-view-mode)
-	       (not (eq major-mode 'markdown-view-mode)))
-      (markdown-view-mode))
-    (local-set-key (kbd "q") 'bury-buffer)
-    (goto-char (point-min))
-    (re-search-forward (concat "^#+ " what))
-    (recenter 0)))
+(defun meson--find-reference-manual ()
+  "Return the absolute filename of the Meson reference manual or nil."
+  (let ((default-directory meson-markdown-docs-dir))
+    (when-let (manual (seq-find #'file-exists-p '("Reference-manual.md"
+                                                  "Reference-manual.md.gz")))
+      (expand-file-name manual))))
 
-(defun meson-lookup-doc-at-point ()
-  "Show Meson documentation related to current point.
-Currently, it shows something only for functions."
-  (interactive)
-  (if-let ((func (meson-function-at-point)))
-      (meson-lookup-doc func)
-    (message "Nothing to look up")))
+(defun meson--make-lookup-regexp (identifier)
+  "Make regexp for looking up IDENTIFIER in the Meson reference manual."
+  ;; In Emacs 27 this could be simplified to (rx ... (literal identifier) ...).
+  (rx-to-string
+   `(seq bol (or (seq (+ "#") " " (? "`") ,identifier (or "(" "`" eol))
+                 (seq (* blank) "- `" ,identifier "(")))))
+
+(defun meson--search-in-reference-manual (identifier)
+  "Search for the function or object IDENTIFIER in the current buffer.
+The current buffer is assumed to contain the Meson reference manual.
+Return either `line-beginning-position' of the matching line or nil."
+  (goto-char (point-min))
+  (and (re-search-forward (meson--make-lookup-regexp identifier) nil t)
+       (line-beginning-position)))
+
+(defun meson-lookup-doc (identifier)
+  "Open Meson reference manual and find IDENTIFIER.
+Return the buffer containing the reference manual.
+IDENTIFIER is the name of a Meson function or object as a string.
+Signal a `user-error' if the manual could not be found
+or does not contain IDENTIFIER."
+  (interactive (list (or (thing-at-point 'symbol)
+                         (meson-function-at-point)
+                         (user-error "No identifier at point"))))
+  (let ((buf (find-file-noselect
+              (or (meson--find-reference-manual)
+                  (user-error "Meson reference manual not found")))))
+    (with-current-buffer buf
+      ;; Set up buffer only once after creation.
+      (unless (string= (buffer-name) "*Meson Reference Manual*")
+        (rename-buffer "*Meson Reference Manual*" 'unique)
+        (read-only-mode)
+        (when (and (require 'markdown-mode nil t)
+                   (fboundp 'markdown-view-mode)
+                   (not (eq major-mode 'markdown-view-mode)))
+          (markdown-view-mode))
+        (local-set-key (kbd "q") 'bury-buffer)
+        (when (bound-and-true-p evil-mode)
+          (evil-local-set-key 'normal (kbd "q") 'bury-buffer)))
+      (goto-char
+       (or (meson--search-in-reference-manual identifier)
+           (user-error "%s not found in Meson reference manual" identifier))))
+    (switch-to-buffer buf)
+    (recenter 0)
+    buf))
+
+(defalias 'meson-lookup-doc-at-point (symbol-function 'meson-lookup-doc))
 
 ;;; Mode definition
 
 (defvar meson-mode-map
        (let ((map (make-sparse-keymap)))
-         (define-key map [f1] 'meson-lookup-doc-at-point)
+         (define-key map [f1] 'meson-lookup-doc)
          map)
        "Keymap for `meson-mode'.")
 

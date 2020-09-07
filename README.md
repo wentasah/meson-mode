@@ -25,14 +25,13 @@ or install completion frameworks such as `company`.  To enable
 Return name of the function under point.
 The point can be anywhere within function name or argument list.
 
-#### `(meson-lookup-doc WHAT)`
+#### `(meson-lookup-doc IDENTIFIER)`
 
-Open Meson reference manual and find heading starting with WHAT.
-
-#### `(meson-lookup-doc-at-point)`
-
-Show Meson documentation related to current point.
-Currently, it shows something only for functions.
+Open Meson reference manual and find IDENTIFIER.
+Return the buffer containing the reference manual.
+IDENTIFIER is the name of a Meson function or object as a string.
+Signal a `user-error` if the manual could not be found
+or does not contain IDENTIFIER.
 
 -----
 <div style="padding-top:15px;color: #d0d0d0;">
