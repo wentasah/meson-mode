@@ -1,6 +1,6 @@
 <a href="https://github.com/wentasah/meson-mode"><img src="https://www.gnu.org/software/emacs/images/emacs.png" alt="Emacs Logo" width="80" height="80" align="right"></a>
 ## meson-mode.el
-*Major mode for the Meson build system files*
+*Emacs editor major mode for the Meson build system files*
 
 ---
 [![License GPLv3](https://img.shields.io/badge/license-GPL_v3-green.svg)](http://www.gnu.org/licenses/gpl-3.0.html)
