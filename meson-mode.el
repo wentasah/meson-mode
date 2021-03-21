@@ -933,7 +933,8 @@ or does not contain IDENTIFIER."
                          (user-error "No identifier at point"))))
   (let ((buf (find-file-noselect
               (or (meson--find-reference-manual)
-                  (user-error "Meson reference manual not found")))))
+                  (user-error "Meson reference manual not found"))))
+	(switch-to-buffer-preserve-window-point nil))
     (with-current-buffer buf
       ;; Set up buffer only once after creation.
       (unless (string= (buffer-name) "*Meson Reference Manual*")
