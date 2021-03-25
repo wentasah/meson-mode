@@ -1,6 +1,6 @@
 ;;; meson-mode.el --- Major mode for the Meson build system files  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2017, 2020  Michal Sojka
+;; Copyright (C) 2017, 2020, 2021  Michal Sojka
 
 ;; Author: Michal Sojka <sojkam1@fel.cvut.cz>
 ;; Version: 0.2
@@ -865,6 +865,11 @@ Optional SYN-PPSS is the value returned by `syntax-ppss'."
   "Directory containing Meson markdown-formated documentation."
   :type 'directory)
 
+(defcustom meson-doc-display-buffer-action
+  '((display-buffer-reuse-window display-buffer-same-window))
+  "The display action used, when displaying Meson documentation."
+  :type display-buffer--action-custom-type)
+
 (defun meson-smie-rules (kind token)
   "Indentation rules for the SMIE engine.
 See the SMIE documentation for the meaning of KIND and TOKEN
@@ -933,8 +938,7 @@ or does not contain IDENTIFIER."
                          (user-error "No identifier at point"))))
   (let ((buf (find-file-noselect
               (or (meson--find-reference-manual)
-                  (user-error "Meson reference manual not found"))))
-	(switch-to-buffer-preserve-window-point nil))
+                  (user-error "Meson reference manual not found")))))
     (with-current-buffer buf
       ;; Set up buffer only once after creation.
       (unless (string= (buffer-name) "*Meson Reference Manual*")
@@ -947,11 +951,13 @@ or does not contain IDENTIFIER."
         (local-set-key (kbd "q") 'bury-buffer)
         (when (bound-and-true-p evil-mode)
           (evil-local-set-key 'normal (kbd "q") 'bury-buffer)))
-      (goto-char
-       (or (meson--search-in-reference-manual identifier)
-           (user-error "%s not found in Meson reference manual" identifier))))
-    (switch-to-buffer buf)
-    (recenter 0)
+      (let* ((position
+	      (or (meson--search-in-reference-manual identifier)
+		  (user-error "%s not found in Meson reference manual" identifier)))
+	     (window (display-buffer buf meson-doc-display-buffer-action)))
+	(with-selected-window window
+	  (goto-char position)
+	  (recenter 0))))
     buf))
 
 (defalias 'meson-lookup-doc-at-point (symbol-function 'meson-lookup-doc))
