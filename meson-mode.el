@@ -887,13 +887,13 @@ arguments."
     (`(:list-intro . ,(or "eol" ":" "")) t) ; "" is actually "[" because that's what lexer returns
     (`(:after . ":") meson-indent-basic)
     (`(:after . ,(or "=" "+=")) meson-indent-basic)
-    (`(:before . "[") (if (smie-rule-hanging-p) (smie-rule-parent)))
+    (`(:before . ,(or "[" "{")) (if (smie-rule-hanging-p) (smie-rule-parent)))
     (`(:before . "(") (if (smie-rule-hanging-p)
 			  (save-excursion
 			    (smie-backward-sexp 'halfsexp) ; goto parent
 			    (beginning-of-line-text)
 			    (cons 'column (current-column)))))
-    (`(:after . ,(or "[" "(")) meson-indent-basic)
+    (`(:after . ,(or "[" "(" "{")) meson-indent-basic)
     (`(:before . "elif") (smie-rule-parent))
     (_ nil)))
 

@@ -785,6 +785,11 @@ system_uid_max =
     'BEGIN { uid=999 } /^\s*SYS_UID_MAX\s+/ { uid=$2 } END { print uid }',
     '/etc/login.defs').stdout()
 
+dist = {
+  'idctrn' : 5,
+  'iirflt' : 5,
+}
+
 # Local Variables:
 # mode: meson
 # indent-tabs-mode: nil
