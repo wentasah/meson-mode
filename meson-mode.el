@@ -984,6 +984,7 @@ or does not contain IDENTIFIER."
 
   (set (make-local-variable 'comment-start) "# ")
   (set (make-local-variable 'comment-end) "")
+  (setq indent-tabs-mode nil)
   (add-hook 'completion-at-point-functions
             #'meson-completion-at-point-function nil t)
   (smie-setup meson-smie-grammar #'meson-smie-rules
