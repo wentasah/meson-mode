@@ -790,6 +790,28 @@ dist = {
   'iirflt' : 5,
 }
 
+foreach alias : (['halt', 'poweroff', 'reboot', 'shutdown'] +
+                 (conf.get('HAVE_SYSV_COMPAT') == 1 ? ['runlevel', 'telinit'] : []))
+  meson.add_install_script(meson_make_symlink,
+                           join_paths(rootbindir, 'systemctl'),
+                           join_paths(rootsbindir, alias))
+endforeach
+
+sources = files([
+  'aaa/a1.c',
+  'aaa/a2.c',
+  'bbb/subdir1/b1.c',
+  'bbb/subdir2/b2.c',
+  'bbb/subdir10/b3.c',
+  'bbb/subdir20/b4.c',
+  'bbb/b5.c',
+  'bbb/b6.c',
+  'f1.c',
+  'f2.c',
+  'f10.c',
+  'f20.c'
+])
+
 # Local Variables:
 # mode: meson
 # End:
