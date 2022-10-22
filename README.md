@@ -1,6 +1,6 @@
 <a href="https://github.com/wentasah/meson-mode"><img src="https://www.gnu.org/software/emacs/images/emacs.png" alt="Emacs Logo" width="80" height="80" align="right"></a>
 ## meson-mode.el
-*Emacs editor major mode for the Meson build system files*
+*Major mode for the Meson build system files*
 
 ---
 [![License GPLv3](https://img.shields.io/badge/license-GPL_v3-green.svg)](http://www.gnu.org/licenses/gpl-3.0.html)
@@ -17,13 +17,46 @@ or install completion frameworks such as `company`.  To enable
     (add-hook 'meson-mode-hook 'company-mode)
 
 
-### Function Documentation
 
+
+### Customization Documentation
+
+#### `meson-indent-basic`
+
+Indentation offset for meson.build files.
+
+#### `meson-markdown-docs-dir`
+
+Directory containing Meson markdown-formated documentation.
+
+#### `meson-doc-display-buffer-action`
+
+The display action used, when displaying Meson documentation.
+
+### Function and Macro Documentation
 
 #### `(meson-function-at-point)`
 
 Return name of the function under point.
 The point can be anywhere within function name or argument list.
+
+#### `(meson-completion-at-point-function)`
+
+Return possible completion candidates.
+
+#### `(meson-smie-forward-token)`
+
+Move forward by one lexer token.
+
+#### `(meson-smie-backward-token)`
+
+Move backward by one lexer token.
+
+#### `(meson-smie-rules KIND TOKEN)`
+
+Indentation rules for the SMIE engine.
+See the SMIE documentation for the meaning of KIND and TOKEN
+arguments.
 
 #### `(meson-lookup-doc IDENTIFIER)`
 
