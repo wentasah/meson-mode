@@ -116,6 +116,7 @@ If some arguments are numbers, threat them as string lengths."
       ("install_man" :doc "void install_man(list_of_manpages, ...)")
       ("install_subdir" :doc "void install_subdir(subdir_name, install_dir : ..., exclude_files : ..., exclude_directories : ..., strip_directory : ...)")
       ("install_emptydir" :doc "void install_emptydir(list_of_dirs, ...)")
+      ("install_symlink" :doc "void install_symlink(link_name, ...)")
       ("is_disabler" :doc "bool is_disabler(var)")
       ("is_variable" :doc "bool is_variable(varname)")
       ("jar" :doc nil)
@@ -489,6 +490,8 @@ If some arguments are numbers, threat them as string lengths."
      . ("exclude_files" "exclude_directories" "install_dir" "install_mode" "strip_directory"))
     ("install_emptydir"
      . ("install_mode" "install_tag"))
+    ("install_symlink"
+     . ("install_dir" "install_tag" "pointing_to"))
     ("jar"
      . ,meson--known-jar-kwargs)
     ("project"
