@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 (defun py2el (beg end)
   "Helper function for converting Meson data structures from
 Python sources to something more similar to elisp."
