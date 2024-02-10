@@ -1,4 +1,4 @@
-
+;;; -*- lexical-binding: t; -*-
 (defun py2el (beg end)
   "Helper function for converting Meson data structures from
 Python sources to something more similar to elisp."
@@ -35,6 +35,6 @@ Run this in a buffer with meson/docs/markdown/Reference-manual.md"
 			      (skip-syntax-forward " ")
 			      (buffer-substring-no-properties (point) (line-end-position))))))
 	    ;;(edebug)
-	    (add-to-list 'functions (list funcname :doc synopsis)
+	    (push (list funcname :doc synopsis) functions
 	     )))
 	(kill-new (prin1-to-string (reverse functions)))))))
