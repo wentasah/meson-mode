@@ -955,6 +955,7 @@ or does not contain IDENTIFIER."
           (markdown-view-mode))
         (local-set-key (kbd "q") 'bury-buffer)
         (when (bound-and-true-p evil-mode)
+          (declare-function evil-local-set-key nil) ;; suppress "undeclared" warning
           (evil-local-set-key 'normal (kbd "q") 'bury-buffer)))
       (let* ((position
 	      (or (meson--search-in-reference-manual identifier)
