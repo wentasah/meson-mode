@@ -609,7 +609,7 @@ The point can be anywhere within function name or argument list."
 	    (nth 4 ppss))		; inside comment
 	(goto-char (nth 8 ppss))	; go to the beginning
 	(meson-function-at-point))
-       ((cl-some (lambda (fname) (when (looking-at fname) fname)) functions))
+       ((cl-some (lambda (fname) (when (looking-at-p fname) fname)) functions))
        ((and (> (nth 0 ppss) 0)			 ; inside parentheses
 	     (eq (char-after (nth 1 ppss)) ?\()) ; rounded parentheses
 	(goto-char (nth 1 ppss))
@@ -688,7 +688,7 @@ Optional SYN-PPSS is the value returned by `syntax-ppss'."
 	;; that we can still return "eol" token there.
 	(when (or (nth 4 ppss)
 		  (and (not (nth 3 ppss)) ; not inside string
-		       (looking-at "#")))
+		       (looking-at-p "#")))
 	  (end-of-line)
 	  (setq ppss (syntax-ppss)))	; update ppss after move
 	;; Determine token but do not move behind it
