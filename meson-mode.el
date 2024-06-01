@@ -1001,7 +1001,9 @@ or does not contain IDENTIFIER."
 
 ;;;###autoload
 (progn
-  (add-to-list 'auto-mode-alist '("/meson\\(\\.build\\|_options\\.txt\\)\\'" . meson-mode))
+  (add-to-list
+   'auto-mode-alist
+   '("/meson\\(\\.build\\|_options\\.txt\\|\\.options\\)\\'" . meson-mode))
   (eval-after-load 'compile
     '(progn
        (add-to-list 'compilation-error-regexp-alist 'meson)
